@@ -1,0 +1,33 @@
+[
+    {
+      "sportType": "Running",
+      "skillLevel": "beginner",
+      "timeOfDay": "morning",
+      "location": "Lviv"
+    },
+    {
+        "sportType": "Running",
+        "skillLevel": "advanced",
+        "timeOfDay": "morning",
+        "location": "Lviv"
+    },
+    {
+      "sportType": "Basketball",
+      "skillLevel": "advanced",
+      "timeOfDay": "evening",
+      "location": "Kyiv"
+    },
+    {
+      "sportType": "Swimming",
+      "skillLevel": "beginner",
+      "timeOfDay": "day",
+      "location": "Lviv"
+    },
+    {
+      "sportType": "Tennis",
+      "skillLevel": "intermediate",
+      "timeOfDay": "evening",
+      "location": "Odesa"
+    }
+  ]
+  

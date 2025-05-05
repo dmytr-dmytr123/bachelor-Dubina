@@ -1,0 +1,138 @@
+{
+  "user_profile": {
+    "sportType": "Tennis",
+    "skillLevel": "beginner",
+    "location": "Lviv",
+    "time": "morning"
+  },
+  "user_history": [
+    {
+      "sportType": "Football",
+      "skillLevel": "beginner",
+      "location": "Lviv",
+      "time": "day"
+    }
+  ],
+  "events": [
+    {
+      "sportType": "Running",
+      "skillLevel": "intermediate",
+      "location": "Lviv",
+      "time": "morning"
+    },
+    {
+      "sportType": "Basketball",
+      "skillLevel": "intermediate",
+      "location": "Odesa",
+      "time": "morning"
+    },
+    {
+      "sportType": "Swimming",
+      "skillLevel": "beginner",
+      "location": "Kharkiv",
+      "time": "evening"
+    },
+    {
+      "sportType": "Cycling",
+      "skillLevel": "beginner",
+      "location": "Kharkiv",
+      "time": "morning"
+    },
+    {
+      "sportType": "Football",
+      "skillLevel": "advanced",
+      "location": "Poltava",
+      "time": "day"
+    },
+    {
+      "sportType": "Basketball",
+      "skillLevel": "beginner",
+      "location": "Uzhhorod",
+      "time": "evening"
+    },
+    {
+      "sportType": "Basketball",
+      "skillLevel": "intermediate",
+      "location": "Kharkiv",
+      "time": "day"
+    },
+    {
+      "sportType": "Football",
+      "skillLevel": "intermediate",
+      "location": "Dnipro",
+      "time": "evening"
+    },
+    {
+      "sportType": "Basketball",
+      "skillLevel": "beginner",
+      "location": "Lviv",
+      "time": "evening"
+    },
+    {
+      "sportType": "Tennis",
+      "skillLevel": "advanced",
+      "location": "Poltava",
+      "time": "evening"
+    },
+    {
+      "sportType": "Swimming",
+      "skillLevel": "beginner",
+      "location": "Odesa",
+      "time": "day"
+    },
+    {
+      "sportType": "Football",
+      "skillLevel": "beginner",
+      "location": "Odesa",
+      "time": "day"
+    },
+    {
+      "sportType": "Football",
+      "skillLevel": "beginner",
+      "location": "Uzhhorod",
+      "time": "day"
+    },
+    {
+      "sportType": "Swimming",
+      "skillLevel": "advanced",
+      "location": "Odesa",
+      "time": "evening"
+    },
+    {
+      "sportType": "Running",
+      "skillLevel": "advanced",
+      "location": "Odesa",
+      "time": "evening"
+    },
+    {
+      "sportType": "Running",
+      "skillLevel": "beginner",
+      "location": "Uzhhorod",
+      "time": "morning"
+    },
+    {
+      "sportType": "Running",
+      "skillLevel": "beginner",
+      "location": "Poltava",
+      "time": "evening"
+    },
+    {
+      "sportType": "Football",
+      "skillLevel": "beginner",
+      "location": "Odesa",
+      "time": "evening"
+    },
+    {
+      "sportType": "Swimming",
+      "skillLevel": "beginner",
+      "location": "Dnipro",
+      "time": "day"
+    },
+    {
+      "sportType": "Basketball",
+      "skillLevel": "intermediate",
+      "location": "Poltava",
+      "time": "morning"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "all_sports": [
+    "Football",
+    "Tennis",
+    "Basketball",
+    "Running",
+    "Swimming",
+    "Cycling"
+  ],
+  "skill_levels": [
+    "beginner",
+    "intermediate",
+    "advanced"
+  ],
+  "times_of_day": [
+    "morning",
+    "day",
+    "evening"
+  ],
+  "locations": [
+    "Lviv",
+    "Kyiv",
+    "Odesa",
+    "Kharkiv",
+    "Dnipro",
+    "Ivano-Frankivsk",
+    "Uzhhorod",
+    "Poltava"
+  ]
+}

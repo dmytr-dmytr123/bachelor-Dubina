@@ -1,0 +1,40 @@
+{
+  "user_profile": {
+    "sports": ["Running"],
+    "skillLevel": "beginner",
+    "timeOfDay": ["morning", "evening"],
+    "location": "Kyiv"
+  },
+  "user_history": [
+    {
+      "sportType": "Football",
+      "skillLevel": "beginner",
+      "time": "07:00",
+      "location": "Kyiv",
+      "date": "2025-05-01"
+    }
+  ],
+  "events": [
+    {
+      "title": "Morning Run",
+      "sportType": "Running",
+      "skillLevel": "beginner",
+      "time": "07:00",
+      "location": "Kyiv"
+    },
+    {
+      "title": "Advanced Football",
+      "sportType": "Football",
+      "skillLevel": "advanced",
+      "time": "18:00",
+      "location": "Lviv"
+    },
+    {
+      "title": "Evening Yoga",
+      "sportType": "Yoga",
+      "skillLevel": "beginner",
+      "time": "20:00",
+      "location": "Kyiv"
+    }
+  ]
+}
