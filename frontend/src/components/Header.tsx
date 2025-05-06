@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Menu, CircleUser } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
-import { Dialog } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import InvitationsModal from "./InvitationsModal";
 import useUser from "@/context/User/UserHook";
 import EmailDialog from "@/components/Auth/EmailDialog";
 import PasswordDialog from "@/components/Auth/PasswordDialog";
@@ -29,7 +30,6 @@ const Header = () => {
 
   const isVenueOwner = user?.role === "venue_owner";
   const isUsualUser = user?.role === "user";
-
 
   return (
     <header className="top-0 flex h-16 items-center gap-4 border-b px-4 md:px-6 sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -77,50 +77,64 @@ const Header = () => {
         </SheetTrigger>
         <SheetContent side="left">
           <nav className="grid gap-6 text-lg font-medium">
-            <Link to="/" className="flex items-center gap-2 text-lg font-semibold">
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-lg font-semibold"
+            >
               SPORTEV
               <span className="sr-only">SPORTEV</span>
             </Link>
             <Link
-          to="/"
-          className="text-foreground transition-colors hover:text-foreground"
-        >
-          Home
-        </Link>
+              to="/"
+              className="text-foreground transition-colors hover:text-foreground"
+            >
+              Home
+            </Link>
 
-        {!isVenueOwner && (
-          <Link
-            to="/events"
-            className="text-foreground transition-colors hover:text-foreground"
-          >
-            Events
-          </Link>
-        )}
+            {!isVenueOwner && (
+              <Link
+                to="/events"
+                className="text-foreground transition-colors hover:text-foreground"
+              >
+                Events
+              </Link>
+            )}
 
-        {isVenueOwner && (
-          <Link
-            to="/my-venues"
-            className="text-foreground transition-colors hover:text-foreground"
-          >
-            My Venues
-          </Link>
-        )}
+            {isVenueOwner && (
+              <Link
+                to="/my-venues"
+                className="text-foreground transition-colors hover:text-foreground"
+              >
+                My Venues
+              </Link>
+            )}
           </nav>
         </SheetContent>
       </Sheet>
 
       <div className="flex w-full justify-end items-center gap-4">
         <div className="relative flex gap-2 items-center">
+         
           {user && (
-            <Button
-              onClick={() => navigate(isVenueOwner ? "/create-venue" : "/create-event")}
-              variant="default"
-            >
-              {isVenueOwner ? "Create Venue" : "Create Event"}
-            </Button>
+            <>
+              <Button
+                onClick={() =>
+                  navigate(isVenueOwner ? "/create-venue" : "/create-event")
+                }
+                variant="default"
+              >
+                {isVenueOwner ? "Create Venue" : "Create Event"}
+              </Button>
+
+            </>
           )}
 
-
+<Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="secondary">Invitations</Button>
+                </DialogTrigger>
+                <InvitationsModal />
+              </Dialog>
           {user && (
             <>
               <DropdownMenu>
@@ -146,10 +160,16 @@ const Header = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Dialog open={emailDialog} onOpenChange={() => setEmailDialog(!emailDialog)}>
+              <Dialog
+                open={emailDialog}
+                onOpenChange={() => setEmailDialog(!emailDialog)}
+              >
                 <EmailDialog setEmailDialog={setEmailDialog} />
               </Dialog>
-              <Dialog open={pwdDialog} onOpenChange={() => setPwdDialog(!pwdDialog)}>
+              <Dialog
+                open={pwdDialog}
+                onOpenChange={() => setPwdDialog(!pwdDialog)}
+              >
                 <PasswordDialog setPwdDialog={setPwdDialog} />
               </Dialog>
             </>
