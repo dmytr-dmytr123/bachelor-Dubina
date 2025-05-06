@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
+import RecommendedInvitesModal from "@/components/events/RecommendedInvites";
 
 const EventPage = () => {
   const { eventId } = useParams();
@@ -29,25 +30,30 @@ const EventPage = () => {
     const fetchEvent = async () => {
       try {
         const res = await axios.get(`/events/${eventId}`);
-        console.log("Event Data:", res.data); // Add this line
+        console.log("Event Data:", res.data);
         const user = JSON.parse(localStorage.getItem("user"));
-  
-        const alreadyJoined = res.data.participants.some((participant) => participant._id === user._id);
+
+        const alreadyJoined = res.data.participants.some(
+          (participant) => participant._id === user._id
+        );
         const userIsCreator = res.data.createdBy?._id === user._id;
-  
+
         setEvent(res.data);
         setUserJoined(alreadyJoined);
         setIsCreator(userIsCreator);
       } catch (error) {
         console.error("Error fetching event:", error);
-        toast({ variant: "destructive", title: "Error", description: "Failed to load event details." });
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to load event details.",
+        });
       } finally {
         setLoading(false);
       }
     };
     fetchEvent();
   }, [eventId]);
-  
 
   const handleJoinEvent = async () => {
     try {
@@ -188,6 +194,10 @@ const EventPage = () => {
             </ul>
           </div>
         </CardContent>
+      
+        
+      
+
         <CardFooter className="flex justify-between">
           {event.isFull ? (
             <Button disabled>Event Full</Button>
@@ -208,6 +218,21 @@ const EventPage = () => {
               {joining ? "Joining..." : "Join Event"}
             </Button>
           )}
+            <RecommendedInvitesModal
+            eventId={eventId}
+            currentParticipants={event.participants.map((p) => String(p._id))}
+            onInvite={(invitedId) => {
+              const invitedUser = {
+                _id: invitedId,
+                name: "Invited User",
+                email: "unknown@email.com",
+              };
+              setEvent((prev) => ({
+                ...prev,
+                participants: [...prev.participants, invitedUser],
+              }));
+            }}
+          />
           {isCreator && (
             <Button variant="destructive" onClick={handleDeleteEvent}>
               Delete Event

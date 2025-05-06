@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import useAxios from "@/hooks/useAxios";
 import { useToast } from "@/components/ui/use-toast";
+import EventsRecommendations from "./EventRecommendations.tsx";
 
 const EventsList = () => {
   const { events, fetchEvents } = useEvent();
@@ -21,6 +22,7 @@ const EventsList = () => {
 
   return (
     <div className="max-w-4xl mx-auto mt-8 space-y-4">
+      <EventsRecommendations/>
       <h2 className="text-2xl font-semibold text-center">🏆 Upcoming Sports Events</h2>
 
       {events.length === 0 ? (
