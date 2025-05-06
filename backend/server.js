@@ -16,6 +16,13 @@ const bodyParser = require("body-parser");
 
 const app = express();
 
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.url);
+  next();
+});
+
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 crossOrigin(app);
@@ -25,10 +32,13 @@ app.use("/api/protect", protectRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/venues", venueRoutes);
 app.use("/api/bookings", bookingRoutes);
+
 app.use(
   "/api/bookings/webhook",
   bodyParser.raw({ type: "application/json" })
 );
+
+
 
 const __dirname1 = path.resolve();
 
