@@ -5,6 +5,198 @@ const Venue = require("../models/venueModel");
 const Booking = require("../models/bookingModel");
 require("dotenv").config();
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const {
+  runRecommenderPythonScript,
+} = require("../python_bridge/recommenderBridge");
+
+const inviteUserToEvent = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const { userIdToInvite } = req.body;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    //if already joined
+    if (event.participants.includes(userIdToInvite)) {
+      return res.status(400).json({ message: "User already joined the event" });
+    }
+
+    //if already invited
+    if (event.invitedUsers.includes(userIdToInvite)) {
+      return res.status(400).json({ message: "User already invited" });
+    }
+
+    event.invitedUsers.push(userIdToInvite);
+    await event.save();
+
+    res.status(200).json({ message: "User has been invited. Waiting for confirmation." });
+  } catch (error) {
+    console.error("Error inviting user:", error);
+    res.status(500).json({ message: "Failed to invite user" });
+  }
+};
+
+const acceptInvite = async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const userId = req.user._id;
+
+    const event = await Event.findById(eventId);
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    //if not invited
+    if (!event.invitedUsers.includes(userId)) {
+      return res.status(403).json({ message: "You are not invited to this event" });
+    }
+
+    //if already there
+    if (event.participants.includes(userId)) {
+      return res.status(400).json({ message: "Already joined" });
+    }
+
+    //out of invites to participants
+    event.invitedUsers = event.invitedUsers.filter(
+      (id) => id.toString() !== userId.toString()
+    );
+    event.participants.push(userId);
+    await event.save();
+
+    const user = await User.findById(userId);
+    user.attendedEvents.push(event._id);
+    await user.save();
+
+    res.status(200).json({ message: "You have successfully joined the event." });
+  } catch (error) {
+    console.error("Error accepting invite:", error);
+    res.status(500).json({ message: "Failed to accept invitation" });
+  }
+};
+
+const getUserInvitations = async (req, res) => {
+  try {
+    const invitations = await Event.find({ invitedUsers: req.user._id })
+      .populate("createdBy", "name email")
+      .populate("venue", "location");
+
+    res.status(200).json({ invitations });
+  } catch (error) {
+    console.error("Error fetching invitations:", error);
+    res.status(500).json({ message: "Failed to load invitations" });
+  }
+};
+
+
+
+
+
+const getUserRecommendations = async (req, res) => {
+  try {
+    console.log("getUserRecommendations called");
+
+    const userId = req.user._id;
+    const user = await User.findById(userId);
+    const userProfile = {
+      _id: user._id.toString(),
+      sports: user.preferences?.sports || [],
+      skillLevel: user.preferences?.skillLevel || "beginner",
+      timeOfDay: user.preferences?.timeOfDay || [],
+      location: user.preferences?.location,
+    };
+    console.log("MY USER", userProfile);
+    const allUsers = await User.find({ _id: { $ne: user._id } });
+    console.log("ALL USERS", allUsers);
+    const simplifiedUsers = allUsers.map((user) => ({
+      _id: user._id,
+      sports: user.preferences?.sports || [],
+      skillLevel: user.preferences?.skillLevel || "beginner",
+      timeOfDay: user.preferences?.timeOfDay || [],
+      location: user.preferences?.location,
+    }));
+
+    const recommendations = await runRecommenderPythonScript(
+      userProfile,
+      simplifiedUsers,
+      "users"
+    );
+
+    res.status(200).json({ recommendations });
+  } catch (error) {
+    console.error("User recommendation error:", error);
+    res.status(500).json({ message: "User recommendation failed" });
+  }
+};
+
+
+const getRecommendations = async (req, res) => {
+  try {
+    console.log("getRecommendations called");
+    console.log("req.user:", req.user);
+
+    const userId = req.user ? req.user._id : null;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const events = await Event.find().populate("venue");
+
+    const userProfile = {
+      sports: user.preferences?.sports || [],
+      skillLevel: user.preferences?.skillLevel || "beginner",
+      timeOfDay: user.preferences?.timeOfDay || [],
+      location: user.preferences?.location,
+    };
+
+    console.log("userProfile:", userProfile);
+
+    const simplifiedEvents = events.map((e) => ({
+      _id: e._id,
+      title: e.title || "Unknown",
+      sportType: e.sportType || "Unknown",
+      skillLevel: e.skillLevel || "Unknown",
+      date: e.date?.toISOString() || null,
+      time: e.time || "Unknown",
+      location: e.venue?.location?.city || "Unknown",
+    }));
+    
+  
+    
+
+    console.log("simplifiedEvents:", simplifiedEvents);
+
+    const attendedEventDocs = await Event.find({
+      _id: { $in: user.attendedEvents },
+    }).populate("venue");
+
+    const attendedEvents = attendedEventDocs.map((e) => ({
+      _id: e._id,
+      title: e.title || "Unknown",
+      sportType: e.sportType || "Unknown",
+      skillLevel: e.skillLevel || "Unknown",
+      time: e.timeOfDay || e.time || "Unknown",
+      location: e.venue?.location?.city || "Unknown",
+    }));
+    console.log("ATTENDED ", attendedEvents);
+    const { recommendations } = await runRecommenderPythonScript(
+      userProfile,
+      simplifiedEvents,
+      "events",
+      attendedEvents
+    );
+    
+    res.status(200).json({ recommendations });
+  } catch (error) {
+    console.error("Recommendation error:", error);
+    res.status(500).json({ message: "Recommendation failed" });
+  }
+};
+
 
 const createEventWithBooking = async (req, res) => {
   try {
@@ -23,8 +215,15 @@ const createEventWithBooking = async (req, res) => {
     const userId = req.user._id;
 
     if (
-      !title || !sportType || !skillLevel || !date || !time ||
-      !maxParticipants || !venueId || !slot || !amount
+      !title ||
+      !sportType ||
+      !skillLevel ||
+      !date ||
+      !time ||
+      !maxParticipants ||
+      !venueId ||
+      !slot ||
+      !amount
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
@@ -40,7 +239,9 @@ const createEventWithBooking = async (req, res) => {
           payment_method_types: ["card"],
         });
       } catch (error) {
-        return res.status(500).json({ message: "Payment intent creation failed" });
+        return res
+          .status(500)
+          .json({ message: "Payment intent creation failed" });
       }
 
       booking = await Booking.create({
@@ -68,21 +269,28 @@ const createEventWithBooking = async (req, res) => {
     }
 
     const bookedSlot = {
-      day: new Date(slot.start).toLocaleDateString('en-US', { weekday: 'short' }),
-      slot: `${new Date(slot.start).toTimeString().slice(0, 5)}-${new Date(slot.end).toTimeString().slice(0, 5)}`,
+      day: new Date(slot.start).toLocaleDateString("en-US", {
+        weekday: "short",
+      }),
+      slot: `${new Date(slot.start).toTimeString().slice(0, 5)}-${new Date(
+        slot.end
+      )
+        .toTimeString()
+        .slice(0, 5)}`,
     };
 
-    await Venue.findByIdAndUpdate(venueId, {
-      $push: { bookedSlots: bookedSlot },
-      $pull: {
-        "availability.$[elem].timeSlots": bookedSlot.slot
+    await Venue.findByIdAndUpdate(
+      venueId,
+      {
+        $push: { bookedSlots: bookedSlot },
+        $pull: {
+          "availability.$[elem].timeSlots": bookedSlot.slot,
+        },
+      },
+      {
+        arrayFilters: [{ "elem.day": bookedSlot.day }],
       }
-    }, {
-      arrayFilters: [
-        { "elem.day": bookedSlot.day }
-      ]
-    });
-    
+    );
 
     const event = await Event.create({
       title,
@@ -108,10 +316,11 @@ const createEventWithBooking = async (req, res) => {
     });
   } catch (error) {
     console.error("Error creating event with booking:", error.message);
-    res.status(500).json({ message: "Event creation failed", error: error.message });
+    res
+      .status(500)
+      .json({ message: "Event creation failed", error: error.message });
   }
 };
-
 
 const createEvent = async (req, res) => {
   try {
@@ -264,7 +473,7 @@ const createEvent = async (req, res) => {
 const getAllEvents = async (req, res) => {
   try {
     const userId = req.user ? req.user._id : null;
-
+    console.log(userId);
     const events = await Event.find().populate("createdBy", "name email");
 
     const eventsWithStatus = events.map((event) => ({
@@ -367,7 +576,7 @@ const leaveEvent = async (req, res) => {
   try {
     const eventId = req.params.eventId;
     const userId = req.user._id;
-t
+
     const event = await Event.findById(eventId);
     if (!event) {
       return res.status(404).json({
@@ -459,4 +668,9 @@ module.exports = {
   getEventById,
   leaveEvent,
   deleteEvent,
+  getRecommendations,
+  getUserRecommendations,
+  inviteUserToEvent,
+  acceptInvite,
+  getUserInvitations
 };
