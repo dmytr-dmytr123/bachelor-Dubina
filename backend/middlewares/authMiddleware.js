@@ -3,6 +3,7 @@ const User = require("../models/userModel");
 
 const protect = async (req, res, next) => {
   try {
+    console.log("Middleware protect triggered");
     let token;
 
     if (
