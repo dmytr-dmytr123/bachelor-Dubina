@@ -24,7 +24,7 @@ const eventSchema = new mongoose.Schema({
   time: { type: String, required: true },
   maxParticipants: { type: Number, required: true, min: 1 },
   venue: { type: mongoose.Schema.Types.ObjectId, ref: "Venue", required: true },
-  booking: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" }, // Linking the booking
+  booking: { type: mongoose.Schema.Types.ObjectId, ref: "Booking" },
   organizer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
@@ -35,13 +35,15 @@ const eventSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }], // Participants list
+  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   createdAt: { type: Date, default: Date.now },
   status: {
     type: String,
     enum: ["upcoming", "completed", "cancelled"],
     default: "upcoming",
   },
+  invitedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+
 });
 
 module.exports = mongoose.model("Event", eventSchema);
