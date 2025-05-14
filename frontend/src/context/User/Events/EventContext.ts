@@ -1,5 +1,14 @@
 import { createContext } from "react";
 
+type Venue = {
+  _id: string;
+  name: string;
+  location: {
+    address: string;
+    city: string;
+  };
+};
+
 type Event = {
   _id: string;
   title: string;
@@ -8,7 +17,7 @@ type Event = {
   skillLevel: "beginner" | "intermediate" | "advanced";
   date: string;
   time: string;
-  venue?: string;
+  venue?: Venue;
   customLocation?: string;
   maxParticipants: number;
   participants: string[];
@@ -33,7 +42,6 @@ type CreateEventInput = {
     end: string;
   };
 };
-
 
 type EventContextType = {
   events: Event[];

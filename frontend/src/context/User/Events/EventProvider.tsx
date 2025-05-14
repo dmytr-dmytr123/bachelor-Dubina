@@ -2,6 +2,15 @@ import { useState, useEffect } from "react";
 import EventContext from "./EventContext";
 import useAxios from "@/hooks/useAxios";
 
+type Venue = {
+  _id: string;
+  name: string;
+  location: {
+    address: string;
+    city: string;
+  };
+};
+
 type Event = {
   _id: string;
   title: string;
@@ -10,7 +19,7 @@ type Event = {
   skillLevel: "beginner" | "intermediate" | "advanced";
   date: string;
   time: string;
-  venue?: string;
+  venue?: Venue;
   customLocation?: string;
   maxParticipants: number;
   participants: string[];
@@ -29,7 +38,7 @@ type CreateEventInput = {
   time: string;
   maxParticipants: number;
   customLocation?: string;
-  venue?: string;
+  venueId?: string;
 };
 
 type EventProviderProps = {
@@ -44,6 +53,7 @@ const EventProvider = ({ children }: EventProviderProps) => {
     try {
       const res = await axios.get("/events");
       setEvents(res.data);
+      console.log("events fetch", res);
     } catch (error) {
       console.error("Failed to fetch events:", error);
     }
@@ -52,12 +62,9 @@ const EventProvider = ({ children }: EventProviderProps) => {
   const createEvent = async (eventData: CreateEventInput) => {
     try {
       const res = await axios.post("/events/create-with-booking", eventData);
-  
-      console.log("Event creation response:", res.data);
-  
       if (res.data?.data?.event) {
         setEvents((prev) => [...prev, res.data.data.event]);
-        return res.data; 
+        return res.data;
       } else {
         throw new Error(`Unexpected response structure: ${JSON.stringify(res.data)}`);
       }
@@ -66,8 +73,6 @@ const EventProvider = ({ children }: EventProviderProps) => {
       throw error;
     }
   };
-  
-  
 
   useEffect(() => {
     fetchEvents();
