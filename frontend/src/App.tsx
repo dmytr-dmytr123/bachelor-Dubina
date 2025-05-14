@@ -10,6 +10,8 @@ import PrivateRoute from "@/components/PrivateRoute";
 import VerifiedRoute from "@/components/VerifiedRoute";
 import ProtectedComp from "@/components/ProtectedComp";
 import EventsList from "@/components/Events/EventsList";
+import MyEvents from "@/components/Events/UserEvents/MyEvents";
+
 import NewEvent from "@/components/Events/NewEvent.tsx";
 import EventPage from "@/components/Events/EventPage";
 import VenuesList from "@/components/Venues/VenuesList";
@@ -18,6 +20,9 @@ import NewVenue from "@/components/Venues/NewVenue";
 import VenuePage from "@/components/Venues/VenuePage";
 import EditVenue from "@/components/Venues/EditVenue";
 import HomePage from "@/components/HomePage";
+import AllUsers from "@/components/Users/AllUsers";
+import MyFriends from "@/components/Users/MyFriends";
+import ChatList from "@/components/Chat/ChatListPage";
 
 import ChangeEmailVerification from "@/components/Auth/ChangeEmailVerification";
 import ForgetPwd from "@/components/Auth/ForgetPwd";
@@ -61,7 +66,11 @@ function App() {
               element={<ChangeEmailVerification />}
             />
             <Route path="/home1" element={<ProtectedComp />} />
+            <Route path="/users" element={<AllUsers />} />
+            <Route path="/friends" element={<MyFriends />} />
+            <Route path="/chats" element={<ChatList />} />
 
+            <Route path="/my-events" element={<MyEvents />} />
             <Route path="/events" element={<EventsList />} />
             <Route path="/create-event" element={<NewEvent />} />
             <Route path="/events/:eventId" element={<EventPage />} />
@@ -73,7 +82,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
-      <Footer/>
+      {/* <Footer/> */}
       <Toaster />
     </>
   );
