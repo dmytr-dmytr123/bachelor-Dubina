@@ -58,6 +58,47 @@ const Header = () => {
           </Link>
         )}
 
+        {isUsualUser && (
+          <Link
+            to="/venues"
+            className="text-foreground transition-colors hover:text-foreground"
+          >
+            Venues
+          </Link>
+        )}
+        {isUsualUser && (
+          <Link
+            to="/users"
+            className="text-foreground transition-colors hover:text-foreground"
+          >
+            Users
+          </Link>
+        )}
+        {isUsualUser && (
+          <Link
+            to="/friends"
+            className="text-foreground transition-colors hover:text-foreground"
+          >
+            Friends
+          </Link>
+        )}
+        {isUsualUser && (
+          <Link
+            to="/chats"
+            className="text-foreground transition-colors hover:text-foreground"
+          >
+            Chats
+          </Link>
+        )}
+        {isUsualUser && (
+          <Link
+            to="/my-events"
+            className="text-foreground transition-colors hover:text-foreground"
+          >
+            Profile
+          </Link>
+        )}
+
         {isVenueOwner && (
           <Link
             to="/my-venues"
@@ -114,7 +155,6 @@ const Header = () => {
 
       <div className="flex w-full justify-end items-center gap-4">
         <div className="relative flex gap-2 items-center">
-         
           {user && (
             <>
               <Button
@@ -125,16 +165,18 @@ const Header = () => {
               >
                 {isVenueOwner ? "Create Venue" : "Create Event"}
               </Button>
-
             </>
           )}
 
-<Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="secondary">Invitations</Button>
-                </DialogTrigger>
-                <InvitationsModal />
-              </Dialog>
+          {isUsualUser && (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="secondary">Invitations</Button>
+              </DialogTrigger>
+              <InvitationsModal />
+            </Dialog>
+          )}
+
           {user && (
             <>
               <DropdownMenu>

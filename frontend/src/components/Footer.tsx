@@ -30,7 +30,7 @@ const Footer = () => {
   const isVenueOwner = user?.role === "venue_owner";
 
   return (
-    <footer className="fixed bottom-0 w-full bg-gray-800 text-white text-center py-2">
+    <footer className=" w-full bg-gray-800 text-white text-center py-2 mt-5">
       <div className="container mx-auto">
         &copy; {new Date().getFullYear()} SPORTEV. All rights reserved.
       </div>
