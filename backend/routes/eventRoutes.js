@@ -12,6 +12,8 @@ const {
   inviteUserToEvent,
   acceptInvite,
   getUserInvitations,
+  getMyCreatedEvents,
+  getMyJoinedEvents
 
 } = require("../controllers/eventControllers");
 const protect = require("../middlewares/authMiddleware");
@@ -23,9 +25,11 @@ router.get("/recs", protect, getRecommendations);
 router.post("/:eventId/invite", protect, inviteUserToEvent);
 router.post("/:eventId/accept", protect, acceptInvite);
 router.get("/my/invitations", protect, getUserInvitations);
+router.get("/my/created", protect, getMyCreatedEvents);
+router.get("/my/joined", protect, getMyJoinedEvents);
 
 router.post("/", protect, createEvent);
-router.post("/with-booking", protect, createEventWithBooking);
+router.post("/create-with-booking", protect, createEventWithBooking);
 router.get("/", protect, getAllEvents);
 router.post("/:eventId/join", protect, joinEvent);
 router.post("/:eventId/leave", protect, leaveEvent);
