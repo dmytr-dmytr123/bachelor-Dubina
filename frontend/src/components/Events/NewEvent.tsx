@@ -127,85 +127,110 @@ const NewEvent = () => {
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-8">
-      <Card>
+    <div className="max-w-4xl mx-auto mt-10 px-4">
+      <Card className="p-6 shadow-lg rounded-2xl border border-gray-200">
         <CardHeader>
-          <CardTitle>Create a New Event</CardTitle>
-          <CardDescription>
-            Fill out the details to create a sports event.
+          <CardTitle className="text-2xl">Create a new event</CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Fill out the form with event info and book a venue.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Label>Title</Label>
-          <Input
-            type="text"
-            placeholder="Event Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <Label>Description</Label>
-          <Input
-            type="text"
-            placeholder="Event Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <Label>Sport Type</Label>
-          <Select onValueChange={setSportType}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Sport" />
-            </SelectTrigger>
-            <SelectContent>
-              {sportOptions.map((sport) => (
-                <SelectItem key={sport} value={sport}>
-                  {sport}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Label>Skill Level</Label>
-          <Select onValueChange={setSkillLevel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Skill Level" />
-            </SelectTrigger>
-            <SelectContent>
-              {skillLevels.map((level) => (
-                <SelectItem key={level} value={level}>
-                  {level}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Label>Max Participants</Label>
-          <Input
-            type="number"
-            value={maxParticipants}
-            onChange={(e) => setMaxParticipants(Number(e.target.value))}
-          />
-          <VenueBooking onBooking={(details) => setBookingDetails(details)} />
+  
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <Label>Title</Label>
+              <Input
+                type="text"
+                placeholder="Event Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </div>
+  
+            <div>
+              <Label>Description</Label>
+              <Input
+                type="text"
+                placeholder="Event Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+  
+            <div>
+              <Label>Sport type</Label>
+              <Select onValueChange={setSportType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select sport" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sportOptions.map((sport) => (
+                    <SelectItem key={sport} value={sport}>
+                      {sport}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+  
+            <div>
+              <Label>Skill level</Label>
+              <Select onValueChange={setSkillLevel}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Skill Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {skillLevels.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+  
+            <div>
+              <Label>Max participants</Label>
+              <Input
+                type="number"
+                value={maxParticipants}
+                onChange={(e) => setMaxParticipants(Number(e.target.value))}
+              />
+            </div>
+          </div>
+  
+          <div className="mt-8">
+            <VenueBooking onBooking={(details) => setBookingDetails(details)} />
+          </div>
   
           {clientSecret ? (
-            <Elements stripe={stripePromise}>
-              <PaymentForm
-                clientSecret={clientSecret}
-                onSuccess={() => {
-                  toast({
-                    title: "Payment Successful",
-                    description: "Event booked successfully!",
-                  });
-                  navigate("/events");
-                }}
-              />
-            </Elements>
+            <div className="mt-8">
+              <Elements stripe={stripePromise}>
+                <PaymentForm
+                  clientSecret={clientSecret}
+                  onSuccess={() => {
+                    toast({
+                      title: "Payment Successful",
+                      description: "Event booked successfully!",
+                    });
+                    navigate("/events");
+                  }}
+                />
+              </Elements>
+            </div>
           ) : (
-            <Button onClick={handleCreate} disabled={loading}>
-              {loading ? "Creating..." : "Create Event"}
-            </Button>
+            <div className="mt-8 flex justify-end">
+              <Button onClick={handleCreate} disabled={loading} className="px-6 py-2">
+                {loading ? "Creating..." : "Create Event"}
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
+  
 };
 
 export default NewEvent;

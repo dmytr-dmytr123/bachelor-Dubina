@@ -34,7 +34,7 @@ const PaymentForm = ({ clientSecret, onSuccess }) => {
     <form onSubmit={handleSubmit}>
       <CardElement />
       <Button type="submit" className="mt-4">
-        Pay Now
+        pay now
       </Button>
     </form>
   );

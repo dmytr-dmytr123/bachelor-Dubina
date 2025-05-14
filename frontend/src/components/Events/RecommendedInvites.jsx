@@ -13,7 +13,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-const RecommendedInvitesModal = ({ eventId, currentParticipants = [], onInvite }) => {
+const RecommendedInvitesModal = ({
+  eventId,
+  currentParticipants = [],
+  onInvite,
+}) => {
   const [recommendedUsers, setRecommendedUsers] = useState([]);
   const { toast } = useToast();
   const axios = useAxios();
@@ -22,9 +26,9 @@ const RecommendedInvitesModal = ({ eventId, currentParticipants = [], onInvite }
     const fetchRecommendedUsers = async () => {
       try {
         const res = await axios.get("/events/recommended-users");
-
-        const recommendations = Array.isArray(res.data?.recommendations?.recommendations)
-          ? res.data.recommendations.recommendations
+        console.log("rRESec_users", res);
+        const recommendations = Array.isArray(res.data?.recommended_users)
+          ? res.data.recommended_users
           : [];
 
         const participantIds = currentParticipants.map(String);
@@ -33,6 +37,7 @@ const RecommendedInvitesModal = ({ eventId, currentParticipants = [], onInvite }
         );
 
         setRecommendedUsers(filtered);
+        console.log("rec_users", recommendedUsers);
       } catch (err) {
         console.error("Failed to load recommended users:", err);
       }
@@ -48,13 +53,11 @@ const RecommendedInvitesModal = ({ eventId, currentParticipants = [], onInvite }
       });
 
       toast({
-        title: "User Invited",
+        title: "User invited",
         description: `User ${userId.slice(-4)} was invited successfully.`,
       });
 
-      setRecommendedUsers((prev) =>
-        prev.filter((u) => u.user._id !== userId)
-      );
+      setRecommendedUsers((prev) => prev.filter((u) => u.user._id !== userId));
 
       if (onInvite) {
         onInvite(userId);
@@ -86,7 +89,7 @@ const RecommendedInvitesModal = ({ eventId, currentParticipants = [], onInvite }
             recommendedUsers.map(({ user }) => (
               <li key={user._id} className="flex items-center justify-between">
                 <span>
-                  {user._id.slice(-4)} ({user.skillLevel})
+                  {user.email} ({user.skillLevel})
                 </span>
                 <Button
                   variant="secondary"
@@ -98,7 +101,9 @@ const RecommendedInvitesModal = ({ eventId, currentParticipants = [], onInvite }
               </li>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground">No recommended users to invite.</p>
+            <p className="text-sm text-muted-foreground">
+              No recommended users to invite.
+            </p>
           )}
         </ul>
 

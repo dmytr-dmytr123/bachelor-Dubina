@@ -1,16 +1,11 @@
 import { useState, useEffect } from "react";
-import useVenue from "@/context/Venues/VenueHook";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import axios from "axios"; 
+import useVenue from "@/context/Venues/VenueHook";
+import SelectVenueModal from "./SelectVenueModal";
+import useAxios from "@/hooks/useAxios";
+import useBooking from "@/context/Booking/BookingHook";
 
 type BookingDetails = {
   venueId: string;
@@ -24,38 +19,26 @@ type VenueBookingProps = {
 };
 
 const VenueBooking = ({ onBooking }: VenueBookingProps) => {
-  const { venues, fetchVenues, fetchAvailability } = useVenue();
+  const { fetchAvailability } = useVenue();
   const { toast } = useToast();
+  const { getBookedSlots } = useBooking();
 
-  const [selectedVenue, setSelectedVenue] = useState("");
+  const [selectedVenueId, setSelectedVenueId] = useState<string>("");
   const [selectedDay, setSelectedDay] = useState("");
-  const [availableDays, setAvailableDays] = useState<string[]>([]);
+  const [availableDates, setAvailableDates] = useState<
+    { label: string; value: string; day: string }[]
+  >([]);
   const [timeSlots, setTimeSlots] = useState<string[]>([]);
   const [bookedSlots, setBookedSlots] = useState<string[]>([]);
   const [selectedTimes, setSelectedTimes] = useState<string[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const [showModal, setShowModal] = useState(false);
+  const axios = useAxios();
 
   useEffect(() => {
-    fetchVenues();
-  }, [fetchVenues]);
-
-  useEffect(() => {
-    if (selectedVenue) {
-      const venue = venues.find((v) => v._id === selectedVenue);
-      if (venue?.availability) {
-        const days = venue.availability.map((slot) => slot.day);
-        setAvailableDays(days);
-      }
-    }
-  }, [selectedVenue, venues]);
-
-  useEffect(() => {
-    if (selectedVenue && selectedDay) {
-      fetchAvailability(selectedVenue)
+    if (selectedVenueId) {
+      fetchAvailability(selectedVenueId)
         .then((availability) => {
           if (!availability || !Array.isArray(availability)) {
-            console.error("Invalid availability data structure:", availability);
             toast({
               variant: "destructive",
               title: "Error",
@@ -64,51 +47,90 @@ const VenueBooking = ({ onBooking }: VenueBookingProps) => {
             return;
           }
 
-          const selectedDayAvailability = availability.find(
-            (slot: { day: string }) => slot.day === selectedDay
-          );
+          const today = new Date();
+          const nextWeekDates = Array.from({ length: 7 }).map((_, i) => {
+            const date = new Date(today);
+            date.setDate(today.getDate() + i);
+            const dayName = date.toLocaleDateString("en-US", {
+              weekday: "short",
+            }); //mon,tue
+            const formatted = date.toISOString().split("T")[0]; //yyyy-mm-dd
+            const label = `${String(date.getDate()).padStart(2, "0")}.${String(
+              date.getMonth() + 1
+            ).padStart(2, "0")} (${dayName})`;
+            return { label, value: formatted, day: dayName };
+          });
 
-          if (selectedDayAvailability) {
-            setBookedSlots(
-              selectedDayAvailability.bookedSlots?.map(
-                (slot: any) => slot.slot
-              ) || []
-            );
-            setTimeSlots(selectedDayAvailability.timeSlots || []);
-          } else {
-            setBookedSlots([]);
-            setTimeSlots([]);
-          }
+          const availableDayNames = availability.map((slot: any) => slot.day);
+          const filtered = nextWeekDates.filter((d) =>
+            availableDayNames.includes(d.day)
+          );
+          setAvailableDates(filtered);
         })
         .catch((error) => {
           toast({
             variant: "destructive",
             title: "Error",
-            description: `Failed to fetch booked slots: ${error.message}`,
+            description: `Failed to fetch availability: ${error.message}`,
           });
-          console.error("Error fetching booked slots:", error);
         });
     }
-  }, [selectedVenue, selectedDay, fetchAvailability, toast]);
+  }, [selectedVenueId]);
 
-  const handleDaySelect = (day: string) => {
-    setSelectedDay(day);
+  const handleDaySelect = async (date: string, day: string) => {
+    setSelectedDay(date);
     setSelectedTimes([]);
-    const venue = venues.find((v) => v._id === selectedVenue);
-    const availability = venue?.availability.find((slot) => slot.day === day);
-    setTimeSlots(availability?.timeSlots || []);
+  
+    try {
+      const availability = await fetchAvailability(selectedVenueId);
+      const dayAvailability = availability.find(
+        (slot: { day: string }) => slot.day === day
+      );
+  
+      if (!dayAvailability) {
+        setBookedSlots([]);
+        setTimeSlots([]);
+        return;
+      }
+  
+      const now = new Date();
+      let validSlots = dayAvailability.timeSlots || [];
+  
+      const selectedDateObj = new Date(date);
+      const isToday =
+        now.toISOString().split("T")[0] ===
+        selectedDateObj.toISOString().split("T")[0];
+  
+      if (isToday) {
+        validSlots = validSlots.filter((time: string) => {
+          const [start] = time.split("-");
+          const slotDate = new Date(`${date}T${start}:00`);
+          return slotDate > now;
+        });
+      }
+  
+      const booked = await getBookedSlots(selectedVenueId, date);
+      setBookedSlots(booked);
+      setTimeSlots(validSlots);
+  
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to fetch time slots: ${error.message}`,
+      });
+    }
   };
-
+  
   const handleTimeSelect = (time: string) => {
     setSelectedTimes([time]);
 
     const [start, end] = time.split("-");
-    const bookingDate = new Date().toISOString().split("T")[0];
-    const startDateTime = new Date(`${bookingDate}T${start}:00`).toISOString();
-    const endDateTime = new Date(`${bookingDate}T${end}:00`).toISOString();
+    const startDateTime = new Date(`${selectedDay}T${start}:00`).toISOString();
+    const endDateTime = new Date(`${selectedDay}T${end}:00`).toISOString();
 
-    const bookingDetails = {
-      venueId: selectedVenue,
+    const bookingDetails: BookingDetails = {
+      venueId: selectedVenueId,
       start: startDateTime,
       end: endDateTime,
       status: "pending",
@@ -117,91 +139,38 @@ const VenueBooking = ({ onBooking }: VenueBookingProps) => {
     onBooking(bookingDetails);
   };
 
-  const totalPages = Math.ceil(venues.length / itemsPerPage);
-  const currentVenues = venues.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
   return (
     <div className="mt-4 space-y-4">
-      <Label className="text-lg font-semibold">Select Venue</Label>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
-        {currentVenues.map((venue) => (
-          <Card
-            key={venue._id}
-            className={`p-4 transition-transform transform hover:scale-105 ${
-              selectedVenue === venue._id
-                ? "border-blue-500"
-                : "border-gray-300"
-            }`}
-          >
-            <CardHeader>
-              <CardTitle className="text-xl font-bold">{venue.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>
-                Location: {venue.location?.address}, {venue.location?.city}
-              </p>
-              <p>Sports: {venue.sports.join(", ")}</p>
-              {venue.description && <p>Description: {venue.description}</p>}
-            </CardContent>
-            <CardFooter>
-              <Button
-                variant={selectedVenue === venue._id ? "solid" : "outline"}
-                onClick={() => setSelectedVenue(venue._id)}
-                className="w-full"
-              >
-                {selectedVenue === venue._id ? "Selected" : "Select"}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+      <Label className="text-lg font-semibold">Select venue</Label>
+     
+      <SelectVenueModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        onSelect={(venueId) => {
+          setSelectedVenueId(venueId);
+          setShowModal(false);
+        }}
+      />
 
-      <div className="flex justify-between items-center mt-4">
-        <Button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
-          Previous
-        </Button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <Button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
-          Next
-        </Button>
-      </div>
-
-      {selectedVenue && availableDays.length > 0 && (
+      {selectedVenueId && availableDates.length > 0 && (
         <div className="mt-4">
-          <Label className="text-lg font-semibold">Select Day</Label>
+          <Label className="text-lg font-semibold">Select day</Label>
           <div className="flex flex-wrap gap-2 mb-4">
-            {availableDays.map((day) => (
+            {availableDates.map(({ label, value, day }) => (
               <Button
-                key={day}
-                variant={selectedDay === day ? "solid" : "outline"}
-                onClick={() => handleDaySelect(day)}
+                key={value}
+                variant={selectedDay === value ? "solid" : "outline"}
+                onClick={() => handleDaySelect(value, day)}
               >
-                {day}
+                {label}
               </Button>
             ))}
           </div>
 
-          <Label className="text-lg font-semibold">Select Time</Label>
+          <Label className="text-lg font-semibold">Select time</Label>
           <div className="flex flex-wrap gap-2">
             {timeSlots
-              .filter((time) => !bookedSlots.includes(time))//excluding booked slots
+              .filter((time) => !bookedSlots.includes(time))
               .map((time) => (
                 <Button
                   key={time}
