@@ -157,6 +157,36 @@ const completeBooking = async (req, res) => {
   }
 };
 
+
+const getBookedSlotsForVenueDay = async (req, res) => {
+  try {
+    const { venueId, date } = req.params;
+
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const bookings = await Booking.find({
+      venue: venueId,
+      "slot.start": { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ["pending", "active"] },
+    });
+
+    const slots = bookings.map((b) => {
+      const start = new Date(b.slot.start).toTimeString().slice(0, 5);
+      const end = new Date(b.slot.end).toTimeString().slice(0, 5);
+      return `${start}-${end}`;
+    });
+
+    res.status(200).json({ bookedSlots: slots });
+  } catch (error) {
+    console.error("Error fetching booked slots:", error);
+    res.status(500).json({ message: "Failed to fetch booked slots" });
+  }
+};
+
+
 module.exports = {
   createBookingWithPayment,
   handlePaymentWebhook,
@@ -164,4 +194,5 @@ module.exports = {
   cancelBooking,
   getAllBookings,
   completeBooking,
+  getBookedSlotsForVenueDay
 };
