@@ -21,6 +21,7 @@ type BookingContextType = {
   createBooking: (data: Omit<Booking, "_id" | "paymentStatus" | "paymentIntentId">) => Promise<void>;
   completeBookingPayment: (id: string) => Promise<void>;
   cancelBooking: (id: string) => Promise<void>;
+  getBookedSlots: (venueId: string, date: string) => Promise<string[]>;
 };
 
 const BookingContext = createContext<BookingContextType | undefined>(undefined);

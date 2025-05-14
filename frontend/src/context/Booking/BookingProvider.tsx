@@ -72,9 +72,19 @@ const BookingProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error cancelling booking", error);
     }
   };
+  const getBookedSlots = async (venueId: string, date: string): Promise<string[]> => {
+    try {
+      const response = await axios.get(`/api/bookings/venue/${venueId}/slots/${date}`);
+      return response.data.bookedSlots || [];
+    } catch (error) {
+      console.error("Failed to fetch booked slots", error);
+      return [];
+    }
+  };
+  
 
   return (
-    <BookingContext.Provider value={{ bookings, setBookings, fetchBookings, createBooking, completeBookingPayment, cancelBooking }}>
+    <BookingContext.Provider value={{ bookings, setBookings, fetchBookings, createBooking, completeBookingPayment, cancelBooking,getBookedSlots }}>
       {children}
     </BookingContext.Provider>
   );
