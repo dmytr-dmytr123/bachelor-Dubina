@@ -29,13 +29,19 @@ const userSchema = new mongoose.Schema({
       enum: ["beginner", "intermediate", "advanced"],
     },
     timeOfDay: [{ type: String, enum: ["morning", "day", "evening"] }],
-    location: { type: String }, 
+    location: { type: String },
+    gender: [{ type: String, enum: ["male", "female"] }],
+    age: { type: Number },
   },
 
   //events history
   attendedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
   createdEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
   savedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  sentRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+
 });
 
 userSchema.pre("save", async function (next) {

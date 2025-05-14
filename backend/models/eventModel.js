@@ -42,7 +42,8 @@ const eventSchema = new mongoose.Schema({
     enum: ["upcoming", "completed", "cancelled"],
     default: "upcoming",
   },
-  invitedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
+  invitedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  imageUrl: { type: String }
 
 });
 
