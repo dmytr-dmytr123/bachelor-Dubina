@@ -102,6 +102,7 @@ const getUserRecommendations = async (req, res) => {
     const user = await User.findById(userId);
     const userProfile = {
       _id: user._id.toString(),
+      email: user.email,
       sports: user.preferences?.sports || [],
       skillLevel: user.preferences?.skillLevel || "beginner",
       timeOfDay: user.preferences?.timeOfDay || [],
@@ -112,19 +113,21 @@ const getUserRecommendations = async (req, res) => {
     console.log("ALL USERS", allUsers);
     const simplifiedUsers = allUsers.map((user) => ({
       _id: user._id,
+      email: user.email,
       sports: user.preferences?.sports || [],
       skillLevel: user.preferences?.skillLevel || "beginner",
       timeOfDay: user.preferences?.timeOfDay || [],
       location: user.preferences?.location,
     }));
 
-    const recommendations = await runRecommenderPythonScript(
+    const { recommended_users } = await runRecommenderPythonScript(
       userProfile,
       simplifiedUsers,
       "users"
     );
-
-    res.status(200).json({ recommendations });
+    res.status(200).json({ recommended_users });
+    console.log("ABCD", recommended_users);
+    
   } catch (error) {
     console.error("User recommendation error:", error);
     res.status(500).json({ message: "User recommendation failed" });
@@ -132,7 +135,7 @@ const getUserRecommendations = async (req, res) => {
 };
 
 
-const getRecommendations = async (req, res) => {
+/*const getRecommendations = async (req, res) => {
   try {
     console.log("getRecommendations called");
     console.log("req.user:", req.user);
@@ -191,6 +194,86 @@ const getRecommendations = async (req, res) => {
     );
     
     res.status(200).json({ recommendations });
+  } catch (error) {
+    console.error("Recommendation error:", error);
+    res.status(500).json({ message: "Recommendation failed" });
+  }
+};*/
+const getRecommendations = async (req, res) => {
+  try {
+    console.log("getRecommendations called");
+    const userId = req.user ? req.user._id : null;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const events = await Event.find().populate("venue");
+    const userProfile = {
+      sports: user.preferences?.sports || [],
+      skillLevel: user.preferences?.skillLevel || "beginner",
+      timeOfDay: user.preferences?.timeOfDay || [],
+      location: user.preferences?.location,
+      gender: user.preferences?.gender,
+      age: user.preferences?.age,
+    };
+
+    const simplifiedEvents = events.map((e) => ({
+      _id: e._id,
+      title: e.title || "Unknown",
+      sportType: e.sportType || "Unknown",
+      skillLevel: e.skillLevel || "Unknown",
+      date: e.date?.toISOString() || null,
+      time: e.time || "Unknown",
+      location: e.venue?.location?.city || "Unknown",
+    }));
+
+    const attendedEventDocs = await Event.find({ _id: { $in: user.attendedEvents } }).populate("venue");
+    const attendedEvents = attendedEventDocs.map((e) => ({
+      sportType: e.sportType,
+      skillLevel: e.skillLevel,
+      time: e.timeOfDay || e.time,
+      location: e.venue?.location?.city || "unknown",
+      description: e.title || "unknown",
+      date: e.date?.toISOString().split("T")[0] || null,
+    }));
+
+    const friendsAttended = user.friendsAttended || [];
+
+    const result = await runRecommenderPythonScript(
+      userProfile,
+      simplifiedEvents,
+      attendedEvents,
+      friendsAttended
+    );
+    
+    console.log("PYTHON RECOMMENDER RESULT:", result);
+    
+    if (!result || !Array.isArray(result.recommendations)) {
+      console.error("invalid recommendations returned from python script");
+      return res.status(500).json({ message: "recommendation engine failed" });
+    }
+    
+    const enriched = result.recommendations.map((rec) => {
+      const full = events.find((e) => e._id.toString() === rec.event_id);
+      if (!full) return null;
+    
+      return {
+        _id: full._id,
+        title: full.title,
+        sportType: full.sportType,
+        skillLevel: full.skillLevel,
+        date: full.date,
+        time: full.time,
+        location: full.venue?.location?.city,
+        score: rec.score,
+      };
+    }).filter(Boolean);
+    
+    
+    res.status(200).json({ recommendations: enriched });
+
   } catch (error) {
     console.error("Recommendation error:", error);
     res.status(500).json({ message: "Recommendation failed" });
@@ -474,7 +557,10 @@ const getAllEvents = async (req, res) => {
   try {
     const userId = req.user ? req.user._id : null;
     console.log(userId);
-    const events = await Event.find().populate("createdBy", "name email");
+
+    const events = await Event.find()
+      .populate("createdBy", "name email")
+      .populate("venue", "name location");
 
     const eventsWithStatus = events.map((event) => ({
       ...event.toObject(),
@@ -552,7 +638,8 @@ const getEventById = async (req, res) => {
   try {
     const event = await Event.findById(req.params.eventId)
       .populate("participants", "name email")
-      .populate("organizer", "name email");
+      .populate("organizer", "name email")
+      .populate("venue", "name location");
 
     if (!event) {
       return res.status(404).json({
@@ -571,6 +658,7 @@ const getEventById = async (req, res) => {
     });
   }
 };
+
 
 const leaveEvent = async (req, res) => {
   try {
@@ -660,6 +748,29 @@ const deleteEvent = async (req, res) => {
   }
 };
 
+const getMyCreatedEvents = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const events = await Event.find({ createdBy: userId }).populate("venue", "name location");
+    res.status(200).json(events);
+  } catch (error) {
+    console.error("Error fetching user's created events:", error);
+    res.status(500).json({ message: "Failed to retrieve your created events" });
+  }
+};
+
+const getMyJoinedEvents = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const events = await Event.find({ participants: userId }).populate("venue", "name location");
+    res.status(200).json(events);
+  } catch (error) {
+    console.error("Error fetching joined events:", error);
+    res.status(500).json({ message: "Failed to retrieve your joined events" });
+  }
+};
+
+
 module.exports = {
   createEventWithBooking,
   createEvent,
@@ -672,5 +783,7 @@ module.exports = {
   getUserRecommendations,
   inviteUserToEvent,
   acceptInvite,
-  getUserInvitations
+  getUserInvitations,
+  getMyCreatedEvents,
+  getMyJoinedEvents
 };
