@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import useAxios from "@/hooks/useAxios";
-import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 import ChatMiniModal from "@/components/Chat/ChatMini";
 import useFriends from "@/context/Friends/FriendsHook";
+import UsersFilter from "@/components/Users/UsersFilter"; 
 
 const AllUsers = () => {
   const axios = useAxios();
@@ -14,89 +13,55 @@ const AllUsers = () => {
   const {
     friends,
     sentRequests,
+    allUsers,
+    fetchAllUsers,
     sendRequest,
     cancelRequest,
     fetchAllFriendsData,
   } = useFriends();
+  
 
   const [users, setUsers] = useState([]);
-  const [filter, setFilter] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState([]);
   const [chatUser, setChatUser] = useState(null);
 
-  const [selectedSport, setSelectedSport] = useState("");
-  const [selectedLevel, setSelectedLevel] = useState("");
-  const [selectedTime, setSelectedTime] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState("");
-
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get("/friends/all_users");
-      setUsers(res.data);
-    } catch {
-      toast({ title: "Failed to load users" });
-    }
-  };
+  
 
   useEffect(() => {
-    fetchUsers();
+    fetchAllUsers();
     fetchAllFriendsData();
   }, []);
+  
+  
+  useEffect(() => {
+    if (allUsers.length) setFilteredUsers(allUsers);
+  }, [allUsers]);
 
-  const filteredUsers = users.filter((u) => {
-    const nameMatch =
-      u.name.toLowerCase().includes(filter.toLowerCase()) ||
-      u.email.toLowerCase().includes(filter.toLowerCase());
-    const sportMatch = selectedSport ? u.preferences?.sports?.includes(selectedSport) : true;
-    const levelMatch = selectedLevel ? u.preferences?.skillLevel === selectedLevel : true;
-    const timeMatch = selectedTime ? u.preferences?.timeOfDay?.includes(selectedTime) : true;
-    const locationMatch = selectedLocation ? u.preferences?.location === selectedLocation : true;
-
-    return nameMatch && sportMatch && levelMatch && timeMatch && locationMatch;
-  });
+  const handleFilter = ({ sport, level, time, location, search }) => {
+    const searchTerm = search.toLowerCase().trim();
+  
+    const filtered = allUsers.filter((u) => {
+      const nameMatch = searchTerm
+        ? u.name.toLowerCase().includes(searchTerm) ||
+          u.email.toLowerCase().includes(searchTerm) ||
+          u.name.toLowerCase().split(" ").some((part) => part.startsWith(searchTerm))
+        : true;
+  
+      const sportMatch = sport === "All" || u.preferences?.sports?.includes(sport);
+      const levelMatch = level === "All" || u.preferences?.skillLevel === level;
+      const timeMatch = time === "All" || u.preferences?.timeOfDay?.includes(time);
+      const locationMatch = location === "All" || u.preferences?.location === location;
+  
+      return nameMatch && sportMatch && levelMatch && timeMatch && locationMatch;
+    });
+  
+    setFilteredUsers(filtered);
+  };
+  
 
   return (
     <div className="max-w-7xl mx-auto px-4">
-      <Input
-        placeholder="Search by name or email"
-        className="mb-4"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Select value={selectedSport} onValueChange={setSelectedSport}>
-          <SelectTrigger className="w-full">Sport</SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Basketball">Basketball</SelectItem>
-            <SelectItem value="Football">Football</SelectItem>
-            <SelectItem value="Running">Running</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-          <SelectTrigger className="w-full">Skill Level</SelectTrigger>
-          <SelectContent>
-            <SelectItem value="beginner">Beginner</SelectItem>
-            <SelectItem value="intermediate">Intermediate</SelectItem>
-            <SelectItem value="advanced">Advanced</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedTime} onValueChange={setSelectedTime}>
-          <SelectTrigger className="w-full">Time of day</SelectTrigger>
-          <SelectContent>
-            <SelectItem value="morning">Morning</SelectItem>
-            <SelectItem value="day">Day</SelectItem>
-            <SelectItem value="evening">Evening</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Input
-          placeholder="Location"
-          value={selectedLocation}
-          onChange={(e) => setSelectedLocation(e.target.value)}
-        />
-      </div>
+      <UsersFilter onFilter={handleFilter} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredUsers.map((user) => {
@@ -109,8 +74,7 @@ const AllUsers = () => {
                 <p className="font-semibold">{user.name}</p>
                 <p className="text-sm text-gray-500">{user.email}</p>
                 <p className="text-xs mt-1">
-                  {user.preferences?.sports?.join(", ")} • {user.preferences?.skillLevel} •{" "}
-                  {user.preferences?.timeOfDay?.join(", ")} • {user.preferences?.location}
+                  {user.preferences?.sports?.join(", ")} • {user.preferences?.skillLevel} • {user.preferences?.timeOfDay?.join(", ")} • {user.preferences?.location}
                 </p>
               </div>
               <div className="flex gap-2">
