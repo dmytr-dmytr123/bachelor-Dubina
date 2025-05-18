@@ -1,16 +1,13 @@
 import { useEffect, useState } from "react";
 import useAxios from "@/hooks/useAxios";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EventCard from "./EventCard";
 import { Button } from "@/components/ui/button";
+import MyBookings from "@/components/Events/UserBooking/MyBookings";
 import useUser from "@/context/User/UserHook";
 import { UserRound } from "lucide-react";
+import useEvent from "@/context/User/Events/EventHook";
 
 const PAGE_SIZE = 4;
 
@@ -18,6 +15,7 @@ const MyEvents = () => {
   const axios = useAxios();
   const { toast } = useToast();
   const { user } = useUser();
+  const { fetchMyCreatedEvents, fetchMyJoinedEvents } = useEvent();
 
   const [createdEvents, setCreatedEvents] = useState([]);
   const [joinedEvents, setJoinedEvents] = useState([]);
@@ -27,12 +25,12 @@ const MyEvents = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const [createdRes, joinedRes] = await Promise.all([
-          axios.get("/events/my/created"),
-          axios.get("/events/my/joined"),
+        const [created, joined] = await Promise.all([
+          fetchMyCreatedEvents(),
+          fetchMyJoinedEvents(),
         ]);
-        setCreatedEvents(createdRes.data);
-        setJoinedEvents(joinedRes.data);
+        setCreatedEvents(created || []);
+        setJoinedEvents(joined || []);
       } catch (error) {
         toast({
           variant: "destructive",
@@ -61,23 +59,64 @@ const MyEvents = () => {
         </div>
         <div className="grid md:grid-cols-2 gap-4 text-sm text-muted-foreground">
           <div>
-            <p><span className="font-semibold text-foreground">Name:</span> {user.name}</p>
-            <p><span className="font-semibold text-foreground">Email:</span> {user.email}</p>
-            <p><span className="font-semibold text-foreground">Role:</span> {user.role}</p>
+            <p>
+              <span className="font-semibold text-foreground">Name:</span>{" "}
+              {user.name}
+            </p>
+            <p>
+              <span className="font-semibold text-foreground">Email:</span>{" "}
+              {user.email}
+            </p>
+            <p>
+              <span className="font-semibold text-foreground">Role:</span>{" "}
+              {user.role}
+            </p>
           </div>
           <div>
-            <p><span className="font-semibold text-foreground">Sports:</span> {user.preferences?.sports?.join(", ")}</p>
-            <p><span className="font-semibold text-foreground">Skill Level:</span> {user.preferences?.skillLevel}</p>
-            <p><span className="font-semibold text-foreground">Location:</span> {user.preferences?.location}</p>
-            <p><span className="font-semibold text-foreground">Preferred Time:</span> {user.preferences?.timeOfDay?.join(", ")}</p>
+            <p>
+              <span className="font-semibold text-foreground">Sports:</span>{" "}
+              {user.preferences?.sports?.join(", ")}
+            </p>
+            <p>
+              <span className="font-semibold text-foreground">
+                Skill Level:
+              </span>{" "}
+              {user.preferences?.skillLevel}
+            </p>
+            <p>
+              <span className="font-semibold text-foreground">Location:</span>{" "}
+              {user.preferences?.location}
+            </p>
+            <p>
+              <span className="font-semibold text-foreground">
+                Preferred Time:
+              </span>{" "}
+              {user.preferences?.timeOfDay?.join(", ")}
+            </p>
           </div>
         </div>
       </div>
 
       <Tabs defaultValue="created" className="space-y-4">
         <TabsList className="w-full flex justify-center gap-2">
-          <TabsTrigger value="created" className="px-6 py-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-white">Created</TabsTrigger>
-          <TabsTrigger value="joined" className="px-6 py-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-white">Joined</TabsTrigger>
+          <TabsTrigger
+            value="created"
+            className="px-6 py-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-white"
+          >
+            Created
+          </TabsTrigger>
+          <TabsTrigger
+            value="joined"
+            className="px-6 py-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-white"
+          >
+            Joined
+          </TabsTrigger>
+          <TabsTrigger
+            value="bookings"
+            className="px-6 py-2 rounded-md data-[state=active]:bg-primary data-[state=active]:text-white"
+          >
+            Bookings
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="created">
@@ -106,7 +145,9 @@ const MyEvents = () => {
               </div>
             </>
           ) : (
-            <p className="text-muted-foreground mt-6 text-center">No created events.</p>
+            <p className="text-muted-foreground mt-6 text-center">
+              No created events.
+            </p>
           )}
         </TabsContent>
 
@@ -136,8 +177,13 @@ const MyEvents = () => {
               </div>
             </>
           ) : (
-            <p className="text-muted-foreground mt-6 text-center">No joined events.</p>
+            <p className="text-muted-foreground mt-6 text-center">
+              No joined events.
+            </p>
           )}
+        </TabsContent>
+        <TabsContent value="bookings">
+          <MyBookings />
         </TabsContent>
       </Tabs>
     </div>
