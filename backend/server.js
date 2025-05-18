@@ -32,7 +32,7 @@ const io = new Server(server, {
 
 app.use((req, res, next) => {
   console.log("Incoming request:", req.method, req.url);
-  req.io = io; // дозволяє emit з REST
+  req.io = io;
   next();
 });
 
