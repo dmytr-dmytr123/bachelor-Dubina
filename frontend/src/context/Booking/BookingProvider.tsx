@@ -2,89 +2,67 @@ import { useState, ReactNode } from "react";
 import BookingContext, { Booking } from "./BookingContext";
 import useAxios from "@/hooks/useAxios";
 import { loadStripe } from "@stripe/stripe-js";
+import { useToast } from "@/components/ui/use-toast";
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const BookingProvider = ({ children }: { children: ReactNode }) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const axios = useAxios();
+  const { toast } = useToast();
+
+  const fetchMyBookings = async () => {
+    try {
+      const res = await axios.get("/bookings/users-bookings");
+      console.log("My bookings:", res.data.bookings);
+      setBookings(res.data.bookings);
+    } catch (err) {
+      console.error("Failed to fetch user bookings", err);
+    }
+  };
+
+  const cancelBooking = async (bookingId: string) => {
+    try {
+      await axios.delete(`/bookings/${bookingId}`);
+      toast({ title: "Booking cancelled" });
+    } catch (err) {
+      toast({ title: "Error cancelling booking", variant: "destructive" });
+    }
+  };
 
   const fetchBookings = async () => {
     try {
-      const response = await axios.get("/api/bookings");
-      setBookings(response.data.bookings);
-    } catch (error) {
-      console.error("Error fetching bookings", error);
+      const res = await axios.get("/bookings/all");
+      console.log("All bookings:", res.data.bookings);
+    } catch (err) {
+      console.error("Error fetching all bookings", err);
     }
   };
 
-  const createBooking = async (data: Omit<Booking, "_id" | "paymentStatus" | "paymentIntentId">) => {
+  const getBookedSlots = async (
+    venueId: string,
+    date: string
+  ): Promise<string[]> => {
     try {
-      const response = await axios.post("/api/bookings/create-payment", data);
-      const { clientSecret, booking } = response.data;
-
-      //handle payment on client side
-      const stripe = await stripePromise;
-      if (!stripe) throw new Error("Stripe not loaded");
-
-      const { error } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: {
-          card: { token: "tok_visa" },
-          billing_details: {
-            name: "name name",
-            email: "name@example.com",
-          },
-        },
-      });
-
-      if (error) {
-        console.error("Payment failed:", error.message);
-        throw new Error("Payment failed");
-      }
-
-      //update booking status after payment
-      booking.status = "active";
-      booking.paymentStatus = "succeeded";
-      setBookings((prev) => [...prev, booking]);
-    } catch (error) {
-      console.error("Error creating booking with payment", error);
-    }
-  };
-
-  const completeBookingPayment = async (id: string) => {
-    try {
-      await axios.post(`/api/bookings/${id}/complete`);
-      setBookings((prev) =>
-        prev.map((booking) =>
-          booking._id === id ? { ...booking, status: "completed", paymentStatus: "succeeded" } : booking
-        )
-      );
-    } catch (error) {
-      console.error("Error completing booking payment", error);
-    }
-  };
-
-  const cancelBooking = async (id: string) => {
-    try {
-      await axios.delete(`/api/bookings/${id}`);
-      setBookings((prev) => prev.filter((booking) => booking._id !== id));
-    } catch (error) {
-      console.error("Error cancelling booking", error);
-    }
-  };
-  const getBookedSlots = async (venueId: string, date: string): Promise<string[]> => {
-    try {
-      const response = await axios.get(`/api/bookings/venue/${venueId}/slots/${date}`);
-      return response.data.bookedSlots || [];
-    } catch (error) {
-      console.error("Failed to fetch booked slots", error);
+      const res = await axios.get(`/bookings/venue/${venueId}/slots/${date}`);
+      return res.data.bookedSlots || [];
+    } catch (err) {
+      console.error("Error fetching booked slots", err);
       return [];
     }
   };
-  
 
   return (
-    <BookingContext.Provider value={{ bookings, setBookings, fetchBookings, createBooking, completeBookingPayment, cancelBooking,getBookedSlots }}>
+    <BookingContext.Provider
+      value={{
+        bookings,
+        setBookings,
+        fetchBookings,
+        cancelBooking,
+        getBookedSlots,
+        fetchMyBookings
+      }}
+    >
       {children}
     </BookingContext.Provider>
   );
