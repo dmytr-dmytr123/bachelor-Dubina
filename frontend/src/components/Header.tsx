@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Menu, CircleUser } from "lucide-react";
+import { Menu, CircleUser, Inbox, MessageSquare, Users } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import InvitationsModal from "./InvitationsModal";
@@ -36,7 +36,7 @@ const Header = () => {
       <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
         <Link
           to="/"
-          className="flex items-center gap-2 text-lg font-semibold md:text-base"
+          className="flex items-center gap-2 text-green-500 text-lg font-semibold md:text-base"
         >
           SPORTEV
           <span className="sr-only">SPORTEV</span>
@@ -72,30 +72,6 @@ const Header = () => {
             className="text-foreground transition-colors hover:text-foreground"
           >
             Users
-          </Link>
-        )}
-        {isUsualUser && (
-          <Link
-            to="/friends"
-            className="text-foreground transition-colors hover:text-foreground"
-          >
-            Friends
-          </Link>
-        )}
-        {isUsualUser && (
-          <Link
-            to="/chats"
-            className="text-foreground transition-colors hover:text-foreground"
-          >
-            Chats
-          </Link>
-        )}
-        {isUsualUser && (
-          <Link
-            to="/my-events"
-            className="text-foreground transition-colors hover:text-foreground"
-          >
-            Profile
           </Link>
         )}
 
@@ -149,6 +125,98 @@ const Header = () => {
                 My Venues
               </Link>
             )}
+            {user && (
+              <>
+                <Button
+                  onClick={() =>
+                    navigate(isVenueOwner ? "/create-venue" : "/create-event")
+                  }
+                  variant="default"
+                >
+                  {isVenueOwner ? "Create Venue" : "Create Event"}
+                </Button>
+              </>
+            )}
+
+            {user && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/friends")}
+                >
+                  <Users className="w-5 h-5" />
+                  <span className="sr-only">Friends</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/chats")}
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  <span className="sr-only">Chats</span>
+                </Button>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <Inbox className="w-5 h-5" />
+                      <span className="sr-only">Invitations</span>
+                    </Button>
+                  </DialogTrigger>
+                  <InvitationsModal />
+                </Dialog>
+              </>
+            )}
+
+            {user && (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-full"
+                    >
+                      <CircleUser className="h-5 w-5" />
+                      <span className="sr-only">Toggle user menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <Link to="/profile">
+                      <DropdownMenuItem asChild>
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <DropdownMenuItem onClick={() => setEmailDialog(true)}>
+                      Email
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setPwdDialog(true)}>
+                      Password
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                <Dialog
+                  open={emailDialog}
+                  onOpenChange={() => setEmailDialog(!emailDialog)}
+                >
+                  <EmailDialog setEmailDialog={setEmailDialog} />
+                </Dialog>
+                <Dialog
+                  open={pwdDialog}
+                  onOpenChange={() => setPwdDialog(!pwdDialog)}
+                >
+                  <PasswordDialog setPwdDialog={setPwdDialog} />
+                </Dialog>
+              </>
+            )}
           </nav>
         </SheetContent>
       </Sheet>
@@ -168,13 +236,35 @@ const Header = () => {
             </>
           )}
 
-          {isUsualUser && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="secondary">Invitations</Button>
-              </DialogTrigger>
-              <InvitationsModal />
-            </Dialog>
+          {user && (
+            <>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/friends")}
+              >
+                <Users className="w-5 h-5" />
+                <span className="sr-only">Friends</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/chats")}
+              >
+                <MessageSquare className="w-5 h-5" />
+                <span className="sr-only">Chats</span>
+              </Button>
+
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Inbox className="w-5 h-5" />
+                    <span className="sr-only">Invitations</span>
+                  </Button>
+                </DialogTrigger>
+                <InvitationsModal />
+              </Dialog>
+            </>
           )}
 
           {user && (
@@ -189,6 +279,11 @@ const Header = () => {
                 <DropdownMenuContent align="end">
                   <DropdownMenuLabel>Settings</DropdownMenuLabel>
                   <DropdownMenuSeparator />
+                  <Link to="/profile">
+                    <DropdownMenuItem asChild>
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                  </Link>
                   <DropdownMenuItem onClick={() => setEmailDialog(true)}>
                     Email
                   </DropdownMenuItem>
