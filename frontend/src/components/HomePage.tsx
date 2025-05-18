@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
@@ -14,6 +14,7 @@ const Footer = () => {
 };
 const MainPage = () => {
   const navigate = useNavigate();
+  const sectionRef = useRef(null);
 
   const features = [
     {
@@ -83,7 +84,7 @@ const MainPage = () => {
             </Button>
             <Button
               variant="ghost"
-              onClick={() => navigate("/auth")}
+              onClick={() => sectionRef.current?.scrollIntoView({ behavior: "smooth" })}
               className="px-6 py-3 text-lg font-semibold text-white border border-white hover:bg-white/10 hover:backdrop-blur-md transition-all"
             >
               Get Started
@@ -92,8 +93,8 @@ const MainPage = () => {
         </div>
       </div>
 
-      <div className="py-20 px-6 md:px-16 bg-white -mt-12 z-30 relative">
-        <div className="max-w-6xl mx-auto text-center">
+      <div ref={sectionRef} className="py-20 px-6 md:px-16 bg-white -mt-12 z-30 relative">
+        <div  className="max-w-6xl mx-auto text-center">
           <h2 className="text-4xl font-extrabold mb-6 text-gray-800 tracking-tight">
             Why <span className="text-green-500">SPORTEV</span>?
           </h2>
