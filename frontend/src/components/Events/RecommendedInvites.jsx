@@ -12,52 +12,45 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import useEvent from "@/context/User/Events/EventHook";
 
 const RecommendedInvitesModal = ({
   eventId,
   currentParticipants = [],
   onInvite,
 }) => {
-  const [recommendedUsers, setRecommendedUsers] = useState([]);
   const { toast } = useToast();
   const axios = useAxios();
+  const {
+    fetchRecommendedUsers,
+    recommendedUsers,
+    setRecommendedUsers,
+    inviteUser,
+  } = useEvent();
 
   useEffect(() => {
-    const fetchRecommendedUsers = async () => {
-      try {
-        const res = await axios.get("/events/recommended-users");
-        console.log("rRESec_users", res);
-        const recommendations = Array.isArray(res.data?.recommended_users)
-          ? res.data.recommended_users
-          : [];
-
-        const participantIds = currentParticipants.map(String);
-        const filtered = recommendations.filter(
-          (rec) => !participantIds.includes(rec.user._id)
-        );
-
-        setRecommendedUsers(filtered);
-        console.log("rec_users", recommendedUsers);
-      } catch (err) {
-        console.error("Failed to load recommended users:", err);
-      }
+    const fetchData = async () => {
+      const users = await fetchRecommendedUsers();
+      const participantIds = currentParticipants.map(String);
+      const filtered = users.filter(
+        (u) => u && !participantIds.includes(u._id)
+      );
+      setRecommendedUsers(filtered);
     };
 
-    fetchRecommendedUsers();
+    fetchData();
   }, [currentParticipants, eventId]);
 
   const handleInvite = async (userId) => {
     try {
-      await axios.post(`/events/${eventId}/invite`, {
-        userIdToInvite: userId,
-      });
+      await inviteUser(eventId, userId);
 
       toast({
         title: "User invited",
         description: `User ${userId.slice(-4)} was invited successfully.`,
       });
 
-      setRecommendedUsers((prev) => prev.filter((u) => u.user._id !== userId));
+      setRecommendedUsers((prev) => prev.filter((u) => u._id !== userId));
 
       if (onInvite) {
         onInvite(userId);
@@ -86,10 +79,10 @@ const RecommendedInvitesModal = ({
 
         <ul className="list-disc pl-4 mt-2 space-y-2 max-h-60 overflow-y-auto">
           {recommendedUsers.length > 0 ? (
-            recommendedUsers.map(({ user }) => (
+            recommendedUsers.map((user) => (
               <li key={user._id} className="flex items-center justify-between">
                 <span>
-                  {user.email} ({user.skillLevel})
+                  {user.email} {user.skillLevel}
                 </span>
                 <Button
                   variant="secondary"
@@ -102,14 +95,12 @@ const RecommendedInvitesModal = ({
             ))
           ) : (
             <p className="text-sm text-muted-foreground">
-              No recommended users to invite.
+              Looading...
             </p>
           )}
         </ul>
 
-        <DialogFooter>
-          <Button variant="ghost">Close</Button>
-        </DialogFooter>
+      
       </DialogContent>
     </Dialog>
   );
