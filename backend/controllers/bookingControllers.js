@@ -4,49 +4,9 @@ const Event = require("../models/eventModel");
 const Venue = require("../models/venueModel");
 const User = require("../models/userModel");
 
-const createBookingWithPayment = async (req, res) => {
-  try {
-    const { venueId, slot, amount } = req.body;
-    const userId = req.user._id;
-
-    if (!venueId || !slot?.start || !slot?.end || !amount) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    //test payment
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100),
-      currency: 'usd',
-      payment_method_types: ['card'],
-    });
-
-    //booking pending status
-    const booking = await Booking.create({
-      user: userId,
-      venue: venueId,
-      slot: {
-        start: new Date(slot.start),
-        end: new Date(slot.end),
-      },
-      status: 'pending',
-      paymentIntentId: paymentIntent.id,
-      paymentStatus: 'pending',
-    });
-
-    res.status(201).json({
-      booking,
-      clientSecret: paymentIntent.client_secret,
-      msg: "Test Payment Intent created successfully",
-    });
-  } catch (error) {
-    console.error("Error creating booking with test payment:", error);
-    res.status(500).json({ message: "Failed to create test booking", error: error.message });
-  }
-};
-
 //stripe webhook for payment status
 const handlePaymentWebhook = async (req, res) => {
-  const sig = req.headers['stripe-signature'];
+  const sig = req.headers["stripe-signature"];
 
   try {
     const event = stripe.webhooks.constructEvent(
@@ -55,10 +15,12 @@ const handlePaymentWebhook = async (req, res) => {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    if (event.type === 'payment_intent.succeeded') {
+    if (event.type === "payment_intent.succeeded") {
       const paymentIntent = event.data.object;
 
-      const booking = await Booking.findOne({ paymentIntentId: paymentIntent.id });
+      const booking = await Booking.findOne({
+        paymentIntentId: paymentIntent.id,
+      });
 
       if (booking) {
         booking.status = "active";
@@ -66,10 +28,12 @@ const handlePaymentWebhook = async (req, res) => {
         await booking.save();
         console.log("Payment succeeded, booking activated:", booking._id);
       }
-    } else if (event.type === 'payment_intent.payment_failed') {
+    } else if (event.type === "payment_intent.payment_failed") {
       const paymentIntent = event.data.object;
 
-      const booking = await Booking.findOne({ paymentIntentId: paymentIntent.id });
+      const booking = await Booking.findOne({
+        paymentIntentId: paymentIntent.id,
+      });
 
       if (booking) {
         booking.status = "cancelled";
@@ -85,7 +49,6 @@ const handlePaymentWebhook = async (req, res) => {
     res.status(400).send(`Webhook Error: ${error.message}`);
   }
 };
-
 
 const getUserBookings = async (req, res) => {
   try {
@@ -109,15 +72,57 @@ const cancelBooking = async (req, res) => {
       return res.status(404).json({ msg: "Booking not found." });
     }
 
+    if (booking.user.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ msg: "You are not authorized to cancel this booking." });
+    }
+
     if (booking.paymentIntentId) {
-      await stripe.refunds.create({ payment_intent: booking.paymentIntentId });
-      booking.paymentStatus = "canceled";
+      try {
+        const refund = await stripe.refunds.create({
+          payment_intent: booking.paymentIntentId,
+        });
+        console.log("Stripe refund issued:", refund.id);
+        booking.paymentStatus = "refunded";
+      } catch (refundError) {
+        console.error("Refund failed:", refundError.message);
+        return res.status(500).json({ msg: "Failed to refund payment." });
+      }
     }
 
     booking.status = "cancelled";
+    const start = new Date(booking.slot.start);
+    const end = new Date(booking.slot.end);
+
+    const slotString = `${start.toTimeString().slice(0, 5)}-${end
+      .toTimeString()
+      .slice(0, 5)}`;
+    const dayString = start.toLocaleDateString("en-US", { weekday: "short" });
+
+    await Venue.findByIdAndUpdate(
+      booking.venue,
+      {
+        $push: {
+          "availability.$[elem].timeSlots": slotString,
+        },
+        $pull: {
+          bookedSlots: {
+            day: dayString,
+            slot: slotString,
+          },
+        },
+      },
+      {
+        arrayFilters: [{ "elem.day": dayString }],
+      }
+    );
+
     await booking.save();
 
-    res.status(200).json({ msg: "Booking and payment cancelled successfully." });
+    res
+      .status(200)
+      .json({ msg: "Booking and payment cancelled successfully." });
   } catch (error) {
     console.error("Error cancelling booking:", error.message);
     res.status(500).json({ msg: "Failed to cancel booking." });
@@ -157,7 +162,6 @@ const completeBooking = async (req, res) => {
   }
 };
 
-
 const getBookedSlotsForVenueDay = async (req, res) => {
   try {
     const { venueId, date } = req.params;
@@ -186,13 +190,11 @@ const getBookedSlotsForVenueDay = async (req, res) => {
   }
 };
 
-
 module.exports = {
-  createBookingWithPayment,
   handlePaymentWebhook,
   getUserBookings,
   cancelBooking,
   getAllBookings,
   completeBooking,
-  getBookedSlotsForVenueDay
+  getBookedSlotsForVenueDay,
 };
