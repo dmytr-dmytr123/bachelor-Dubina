@@ -55,10 +55,11 @@ function App() {
       <Routes>
         <Route path="/password/verify/:email/:token" element={<ResetPwd />} />
         <Route path="/password/forget" element={<ForgetPwd />} />
-        <Route path="/home" element={<HomePage />} />
 
         <Route path="/" element={<Auth />} />
         <Route element={<PrivateRoute />}>
+        <Route path="/home" element={<HomePage />} />
+
           <Route path="/verify" element={<VerificationForm />} />
           <Route element={<VerifiedRoute />}>
             <Route
@@ -70,7 +71,7 @@ function App() {
             <Route path="/friends" element={<MyFriends />} />
             <Route path="/chats" element={<ChatList />} />
 
-            <Route path="/my-events" element={<MyEvents />} />
+            <Route path="/profile" element={<MyEvents />} />
             <Route path="/events" element={<EventsList />} />
             <Route path="/create-event" element={<NewEvent />} />
             <Route path="/events/:eventId" element={<EventPage />} />
