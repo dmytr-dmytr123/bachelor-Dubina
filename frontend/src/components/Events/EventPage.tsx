@@ -14,10 +14,18 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/use-toast";
 import RecommendedInvitesModal from "@/components/events/RecommendedInvites";
+import {
+  MapPin,
+  CalendarDays,
+  Clock,
+  Users,
+  UserRoundPlus,
+  Trash2,
+} from "lucide-react";
+import useEvent from "@/context/User/Events/EventHook";
 
 const EventPage = () => {
   const { eventId } = useParams();
-  const axios = useAxios();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -26,23 +34,22 @@ const EventPage = () => {
   const [userJoined, setUserJoined] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
 
+  const { fetchEventById, joinEvent, leaveEvent, deleteEvent, inviteUser } =
+    useEvent();
+
   useEffect(() => {
-    const fetchEvent = async () => {
+    const fetch = async () => {
       try {
-        const res = await axios.get(`/events/${eventId}`);
-        console.log("Event Data:", res.data);
+        const res = await fetchEventById(eventId);
         const user = JSON.parse(localStorage.getItem("user"));
 
-        const alreadyJoined = res.data.participants.some(
-          (participant) => participant._id === user._id
-        );
-        const userIsCreator = res.data.createdBy?._id === user._id;
+        const alreadyJoined = res.participants.some((p) => p._id === user._id);
+        const userIsCreator = res.createdBy === user._id;
 
-        setEvent(res.data);
+        setEvent(res);
         setUserJoined(alreadyJoined);
         setIsCreator(userIsCreator);
       } catch (error) {
-        console.error("Error fetching event:", error);
         toast({
           variant: "destructive",
           title: "Error",
@@ -52,20 +59,19 @@ const EventPage = () => {
         setLoading(false);
       }
     };
-    fetchEvent();
+    fetch();
   }, [eventId]);
 
   const handleJoinEvent = async () => {
     try {
       setJoining(true);
-      await axios.post(`/events/${eventId}/join`);
+      await joinEvent(eventId);
       toast({
         title: "Joined Event",
         description: "You have successfully joined this event.",
       });
 
       const user = JSON.parse(localStorage.getItem("user"));
-
       setEvent((prev) => ({
         ...prev,
         participants: [
@@ -88,19 +94,16 @@ const EventPage = () => {
   const handleLeaveEvent = async () => {
     try {
       setJoining(true);
-      await axios.post(`/events/${eventId}/leave`);
+      await leaveEvent(eventId);
       toast({
         title: "Left Event",
         description: "You have successfully left this event.",
       });
 
       const user = JSON.parse(localStorage.getItem("user"));
-
       setEvent((prev) => ({
         ...prev,
-        participants: prev.participants.filter(
-          (participant) => participant._id !== user._id
-        ),
+        participants: prev.participants.filter((p) => p._id !== user._id),
       }));
       setUserJoined(false);
     } catch (error) {
@@ -117,7 +120,7 @@ const EventPage = () => {
 
   const handleDeleteEvent = async () => {
     try {
-      await axios.delete(`/events/${eventId}`);
+      await deleteEvent(eventId);
       toast({
         title: "Event Deleted",
         description: "The event has been removed successfully.",
@@ -135,53 +138,71 @@ const EventPage = () => {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto mt-8 space-y-4">
-        <Skeleton className="w-full h-40 rounded-lg" />
+      <div className="max-w-4xl mx-auto mt-10 space-y-4">
+        <Skeleton className="w-full h-48 rounded-xl" />
       </div>
     );
   }
 
   if (!event) {
     return (
-      <div className="max-w-4xl mx-auto mt-8 space-y-4">
-        <p className="text-gray-600">Event not found or failed to load.</p>
+      <div className="max-w-4xl mx-auto mt-10 space-y-4 text-center">
+        <p className="text-gray-600 text-lg">
+          Event not found or failed to load.
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto mt-8">
-      <Card className="shadow-md border border-gray-200">
-        <CardHeader>
-          <CardTitle>{event.title}</CardTitle>
-          <CardDescription>
-            {event.sportType} - {event.skillLevel.toUpperCase()}
+    <div className="max-w-4xl mx-auto mt-10 px-4">
+      <Card className="shadow-xl border border-muted rounded-2xl p-4">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-3xl font-bold tracking-tight">
+            {event.title}
+          </CardTitle>
+          <CardDescription className="text-lg text-muted-foreground">
+            {event.sportType} – {event.skillLevel.toUpperCase()}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-gray-600">
-            {event.description || "No description available."}
+
+        <CardContent className="space-y-6">
+          <p className="text-gray-700">
+            {event.description || "No description provided."}
           </p>
-          <div className="mt-4 space-y-1">
-            <Label>Location:</Label>
-            <p>{event.location}</p>
 
-            <Label>Date & Time:</Label>
-            <p>
-              {new Date(event.date).toLocaleDateString()} at {event.time}
-            </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-800">
+            <div className="flex items-center gap-2">
+              <MapPin size={18} className="text-primary" />
+              <span>
+                {event.venue?.name}, {event.venue?.location?.city}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CalendarDays size={18} className="text-primary" />
+              <span>{new Date(event.date).toLocaleDateString()}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock size={18} className="text-primary" />
+              <span>{event.time}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users size={18} className="text-primary" />
+              <span>{event.participants?.length || 0} Participants</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <UserRoundPlus size={18} className="text-primary" />
+              <span>
+                {event.organizer
+                  ? `${event.organizer.name} (${event.organizer.email})`
+                  : "Creator info unavailable"}
+              </span>
+            </div>
+          </div>
 
-            <Label>Event Creator:</Label>
-            {event.organizer ? (
-              <p>
-                {event.organizer.name} ({event.organizer.email})
-              </p>
-            ) : (
-              <p>Creator information not available.</p>
-            )}
-
-            <Label>Participants:</Label>
-            <ul className="list-disc pl-4">
+          <div>
+            <Label className="text-base font-semibold">Participants:</Label>
+            <ul className="list-disc pl-5 mt-1 text-muted-foreground">
               {event.participants?.length > 0 ? (
                 event.participants.map((user) => (
                   <li key={user._id}>
@@ -194,47 +215,50 @@ const EventPage = () => {
             </ul>
           </div>
         </CardContent>
-      
-        
-      
 
-        <CardFooter className="flex justify-between">
-          {event.isFull ? (
-            <Button disabled>Event Full</Button>
-          ) : userJoined ? (
+        <CardFooter className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
+          <div className="flex flex-wrap gap-2">
+            {event.isFull ? (
+              <Button disabled className="w-full sm:w-auto">
+                Event Full
+              </Button>
+            ) : userJoined ? (
+              <Button
+                variant="outline"
+                onClick={handleLeaveEvent}
+                disabled={joining}
+              >
+                {joining ? "Leaving..." : "Leave Event"}
+              </Button>
+            ) : (
+              <Button onClick={handleJoinEvent} disabled={joining}>
+                {joining ? "Joining..." : "Join Event"}
+              </Button>
+            )}
+            <RecommendedInvitesModal
+              eventId={eventId}
+              currentParticipants={event.participants.map((p) => String(p._id))}
+              onInvite={async (invitedId) => {
+                await inviteUser(eventId, invitedId);
+                const invitedUser = {
+                  _id: invitedId,
+                  name: "Invited User",
+                  email: "unknown@email.com",
+                };
+                setEvent((prev) => ({
+                  ...prev,
+                  participants: [...prev.participants, invitedUser],
+                }));
+              }}
+            />
+          </div>
+          {isCreator && (
             <Button
               variant="destructive"
-              onClick={handleLeaveEvent}
-              disabled={joining}
+              onClick={handleDeleteEvent}
+              className="flex items-center gap-2"
             >
-              {joining ? "Leaving..." : "Leave Event"}
-            </Button>
-          ) : (
-            <Button
-              variant="default"
-              onClick={handleJoinEvent}
-              disabled={joining}
-            >
-              {joining ? "Joining..." : "Join Event"}
-            </Button>
-          )}
-            <RecommendedInvitesModal
-            eventId={eventId}
-            currentParticipants={event.participants.map((p) => String(p._id))}
-            onInvite={(invitedId) => {
-              const invitedUser = {
-                _id: invitedId,
-                name: "Invited User",
-                email: "unknown@email.com",
-              };
-              setEvent((prev) => ({
-                ...prev,
-                participants: [...prev.participants, invitedUser],
-              }));
-            }}
-          />
-          {isCreator && (
-            <Button variant="destructive" onClick={handleDeleteEvent}>
+              <Trash2 size={18} />
               Delete Event
             </Button>
           )}
