@@ -123,6 +123,8 @@ const getUserRecommendations = async (req, res) => {
     const { recommended_users } = await runRecommenderPythonScript(
       userProfile,
       simplifiedUsers,
+      [],
+      [],
       "users"
     );
     res.status(200).json({ recommended_users });
@@ -245,7 +247,8 @@ const getRecommendations = async (req, res) => {
       userProfile,
       simplifiedEvents,
       attendedEvents,
-      friendsAttended
+      friendsAttended,
+      "events"
     );
     
     console.log("PYTHON RECOMMENDER RESULT:", result);
