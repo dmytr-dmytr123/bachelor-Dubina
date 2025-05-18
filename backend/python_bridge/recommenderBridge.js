@@ -1,50 +1,27 @@
+const User = require("../models/userModel");
+const Event = require("../models/eventModel");
 const { spawn } = require("child_process");
-const path = require("path");
 
-function runRecommenderPythonScript(userProfile, events, type = "events", userHistory = []) {
+const runRecommenderPythonScript = (profile, events, history = [], friends = [], mode = "events") => {
   return new Promise((resolve, reject) => {
-    const pyPath = path.join(__dirname, "..", "recommendation", "recommender.py");
-    const pythonPath = path.join(__dirname, "..", "..", ".venv", "bin", "python");
-
-    const process = spawn(pythonPath, [pyPath]);
-
-    const input = JSON.stringify({
-      user_profile: userProfile,
-      events,
-      user_history: userHistory,
-      type
-    });
+    const py = spawn("python", ["recommendation/main.py"]);
+    const inputPayload = JSON.stringify({ profile, events, history, friends, mode });
 
     let output = "";
-
-    process.stdout.on("data", (data) => {
-      const text = data.toString();
-      console.log("python returned:", text);
-      output += text;
-    });
-
-    process.on("close", (code) => {
-      if (code === 0) {
-        try {
-          const parsed = JSON.parse(output);
-          resolve(parsed);
-        } catch (err) {
-          reject("Failed to parse JSON: " + err.message);
-        }
-      } else {
-        reject("Python script exited with code " + code);
+    py.stdout.on("data", (data) => (output += data));
+    py.stderr.on("data", (err) => console.error("Python error:", err.toString()));
+    py.on("close", () => {
+      try {
+        const result = JSON.parse(output);
+        resolve(result);
+      } catch (e) {
+        reject("Failed to parse recommender response: " + e.message);
       }
     });
 
-    process.stderr.on("data", (data) => {
-      console.error("Python error:", data.toString());
-    });
-
-    process.stdin.write(input);
-    process.stdin.end();
+    py.stdin.write(inputPayload);
+    py.stdin.end();
   });
-}
-
-module.exports = {
-  runRecommenderPythonScript,
 };
+
+module.exports = { runRecommenderPythonScript };
