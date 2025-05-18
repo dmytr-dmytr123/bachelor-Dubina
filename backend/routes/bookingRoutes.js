@@ -1,6 +1,5 @@
 const express = require("express");
 const {
-  createBookingWithPayment,
   handlePaymentWebhook,
   getUserBookings,
   cancelBooking,
@@ -12,9 +11,8 @@ const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.post("/create-payment", protect, createBookingWithPayment);
 router.post("/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
-router.get("/", protect, getUserBookings);
+router.get("/users-bookings", protect, getUserBookings);
 router.delete("/:id", protect, cancelBooking);
 router.get("/all", protect, getAllBookings);
 router.post("/:id/complete", protect, completeBooking);
