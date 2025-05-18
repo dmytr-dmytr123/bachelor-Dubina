@@ -35,13 +35,16 @@ const ChatListPage = () => {
         ))}
       </div>
 
-      <div className="hidden sm:flex flex-col flex-1">
-        {selectedUser ? (
-          <ChatWindow user={selectedUser} onClose={() => setSelectedUser(null)} />
-        ) : (
-          <div className="m-auto text-gray-400">← Select a chat to start messaging</div>
-        )}
-      </div>
+      <div className="hidden sm:flex flex-col flex-1 items-center justify-center">
+  {selectedUser ? (
+    <div className="w-full h-full">
+      <ChatWindow user={selectedUser} onClose={() => setSelectedUser(null)} />
+    </div>
+  ) : (
+    <div className="m-auto text-gray-400">← Select a chat to start messaging</div>
+  )}
+</div>
+
     </div>
   );
 };
