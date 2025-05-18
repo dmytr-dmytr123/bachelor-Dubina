@@ -1,0 +1,35 @@
+[
+    {
+      "user_profile": {
+        "sports": ["Running", "Swimming"],
+        "skillLevel": "beginner",
+        "location": "Kyiv",
+        "timeOfDay": ["morning"]
+      },
+      "event": {
+        "title": "Плавання для початківців",
+        "sportType": "Swimming",
+        "skillLevel": "beginner",
+        "location": "Kyiv",
+        "time": "10:00",
+        "date": "2025-04-20"
+      }
+    },
+    {
+      "user_profile": {
+        "sports": ["Running", "Swimming"],
+        "skillLevel": "beginner",
+        "location": "Kyiv",
+        "timeOfDay": ["morning"]
+      },
+      "event": {
+        "title": "Ранковий забіг",
+        "sportType": "Running",
+        "skillLevel": "beginner",
+        "location": "Kyiv",
+        "time": "07:30",
+        "date": "2025-04-25"
+      }
+    }
+  ]
+  

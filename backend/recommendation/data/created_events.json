@@ -1,0 +1,38 @@
+[
+    {
+      "title": "Йога на заході сонця",
+      "sportType": "Yoga",
+      "skillLevel": "beginner",
+      "location": "Kyiv",
+      "time": "19:00"
+    },
+    {
+      "title": "Фітнес-марафон",
+      "sportType": "Fitness",
+      "skillLevel": "beginner",
+      "location": "Kyiv",
+      "time": "10:00"
+    },
+    {
+      "title": "Просунутий біг",
+      "sportType": "Running",
+      "skillLevel": "advanced",
+      "location": "Kyiv",
+      "time": "08:00"
+    },
+    {
+      "title": "Теніс середнього рівня",
+      "sportType": "Tennis",
+      "skillLevel": "intermediate",
+      "location": "Lviv",
+      "time": "14:00"
+    },
+    {
+      "title": "Плавання для профі",
+      "sportType": "Swimming",
+      "skillLevel": "advanced",
+      "location": "Kyiv",
+      "time": "09:00"
+    }
+  ]
+  
