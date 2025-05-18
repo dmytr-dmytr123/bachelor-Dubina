@@ -6,6 +6,11 @@ import useVenue from "@/context/Venues/VenueHook";
 import SelectVenueModal from "./SelectVenueModal";
 import useAxios from "@/hooks/useAxios";
 import useBooking from "@/context/Booking/BookingHook";
+import {
+  generateNextWeekDates,
+  getValidSlots,
+  buildBookingDetails,
+} from "@/utils/bookingUtils";
 
 type BookingDetails = {
   venueId: string;
@@ -47,20 +52,7 @@ const VenueBooking = ({ onBooking }: VenueBookingProps) => {
             return;
           }
 
-          const today = new Date();
-          const nextWeekDates = Array.from({ length: 7 }).map((_, i) => {
-            const date = new Date(today);
-            date.setDate(today.getDate() + i);
-            const dayName = date.toLocaleDateString("en-US", {
-              weekday: "short",
-            }); //mon,tue
-            const formatted = date.toISOString().split("T")[0]; //yyyy-mm-dd
-            const label = `${String(date.getDate()).padStart(2, "0")}.${String(
-              date.getMonth() + 1
-            ).padStart(2, "0")} (${dayName})`;
-            return { label, value: formatted, day: dayName };
-          });
-
+          const nextWeekDates = generateNextWeekDates();
           const availableDayNames = availability.map((slot: any) => slot.day);
           const filtered = nextWeekDates.filter((d) =>
             availableDayNames.includes(d.day)
@@ -80,39 +72,23 @@ const VenueBooking = ({ onBooking }: VenueBookingProps) => {
   const handleDaySelect = async (date: string, day: string) => {
     setSelectedDay(date);
     setSelectedTimes([]);
-  
+
     try {
       const availability = await fetchAvailability(selectedVenueId);
       const dayAvailability = availability.find(
         (slot: { day: string }) => slot.day === day
       );
-  
+
       if (!dayAvailability) {
         setBookedSlots([]);
         setTimeSlots([]);
         return;
       }
-  
-      const now = new Date();
-      let validSlots = dayAvailability.timeSlots || [];
-  
-      const selectedDateObj = new Date(date);
-      const isToday =
-        now.toISOString().split("T")[0] ===
-        selectedDateObj.toISOString().split("T")[0];
-  
-      if (isToday) {
-        validSlots = validSlots.filter((time: string) => {
-          const [start] = time.split("-");
-          const slotDate = new Date(`${date}T${start}:00`);
-          return slotDate > now;
-        });
-      }
-  
+
+      const validSlots = getValidSlots(dayAvailability.timeSlots, date);
       const booked = await getBookedSlots(selectedVenueId, date);
       setBookedSlots(booked);
       setTimeSlots(validSlots);
-  
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -121,28 +97,17 @@ const VenueBooking = ({ onBooking }: VenueBookingProps) => {
       });
     }
   };
-  
+
   const handleTimeSelect = (time: string) => {
     setSelectedTimes([time]);
-
-    const [start, end] = time.split("-");
-    const startDateTime = new Date(`${selectedDay}T${start}:00`).toISOString();
-    const endDateTime = new Date(`${selectedDay}T${end}:00`).toISOString();
-
-    const bookingDetails: BookingDetails = {
-      venueId: selectedVenueId,
-      start: startDateTime,
-      end: endDateTime,
-      status: "pending",
-    };
-
-    onBooking(bookingDetails);
+    const details = buildBookingDetails(time, selectedDay, selectedVenueId);
+    onBooking(details);
   };
 
   return (
     <div className="mt-4 space-y-4">
       <Label className="text-lg font-semibold">Select venue</Label>
-     
+
       <SelectVenueModal
         open={showModal}
         onClose={() => setShowModal(false)}
@@ -171,6 +136,7 @@ const VenueBooking = ({ onBooking }: VenueBookingProps) => {
           <div className="flex flex-wrap gap-2">
             {timeSlots
               .filter((time) => !bookedSlots.includes(time))
+              .sort()
               .map((time) => (
                 <Button
                   key={time}
