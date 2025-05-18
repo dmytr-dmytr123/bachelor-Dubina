@@ -47,7 +47,7 @@ const ChatProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user._id) return;
     socket.emit("join", user._id);
 
     const handleReceive = (msg: Message) => {
