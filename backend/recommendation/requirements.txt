@@ -1,4 +1,6 @@
-lightgbm
 numpy
 scikit-learn
+lightgbm
 joblib
+matplotlib
+sentence-transformers
