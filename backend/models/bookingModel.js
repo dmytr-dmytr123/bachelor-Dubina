@@ -16,7 +16,7 @@ const bookingSchema = new mongoose.Schema({
   paymentIntentId: { type: String }, //stripe intent id
   paymentStatus: {
     type: String,
-    enum: ["pending", "succeeded", "failed", "canceled"],
+    enum: ["pending", "succeeded", "failed", "refunded","canceled"],
     default: "pending",
   },
   createdAt: { type: Date, default: Date.now },
