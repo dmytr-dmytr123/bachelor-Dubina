@@ -69,58 +69,56 @@ const EventsList = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto mt-10 space-y-6 px-4">
+    <div className="max-w-6xl mx-auto mt-10 space-y-8 px-4">
       <EventsRecommendations />
 
-      <h2 className="text-3xl font-bold text-center text-gray-800">
+      <h2 className="text-3xl md:text-4xl font-bold text-center text-gray-800">
         🏆 Upcoming Sports Events
       </h2>
 
       <EventFilter onFilter={handleFilter} />
 
       {filteredEvents.length === 0 ? (
-        <div className="flex flex-col items-center space-y-4">
-          <Skeleton className="w-full h-32 rounded-xl" />
-          <Skeleton className="w-full h-32 rounded-xl" />
-          <Skeleton className="w-full h-32 rounded-xl" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, idx) => (
+            <Skeleton key={idx} className="w-full h-64 rounded-2xl" />
+          ))}
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {paginatedEvents.map((event) => (
               <Card
                 key={event._id}
-                className="border border-gray-100 shadow-md rounded-2xl hover:shadow-lg transition-shadow duration-300"
+                className="border border-gray-100 shadow-md rounded-2xl hover:shadow-xl transition-all duration-300 bg-white"
               >
                 <img
                   src={sportImages[event.sportType] || sportImages.Football}
                   alt={event.sportType}
                   className="w-full h-40 object-cover rounded-t-2xl"
                 />
-                <CardHeader className="pb-1">
+                <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <div>
-                      <CardTitle className="text-lg font-semibold text-gray-800">
+                      <CardTitle className="text-lg font-semibold text-gray-900">
                         {event.title}
                       </CardTitle>
-                      <CardDescription className="text-sm text-muted-foreground mt-0.5">
+                      <CardDescription className="text-sm text-muted-foreground">
                         {event.sportType}
                       </CardDescription>
                     </div>
-                    <span className="px-2 py-0.5 text-xs bg-blue-50 text-blue-700 rounded-full uppercase font-medium">
+                    <span className="px-2 py-0.5 text-xs bg-green-100 text-green-700 rounded-full font-medium shadow-sm">
                       {event.skillLevel}
                     </span>
                   </div>
                 </CardHeader>
-                <CardContent className="text-sm text-gray-700 space-y-3 pt-1">
-                  <p className="text-gray-600">
+                <CardContent className="text-sm text-gray-700 space-y-2 pt-1">
+                  <p className="text-gray-600 line-clamp-3">
                     {event.description || "No description available."}
                   </p>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-gray-500">📍</span>
-                    <span>
-                      {event.venue?.location?.city || "Unknown location"}
-                    </span>
+                    <span>{event.venue?.location?.city || "Unknown location"}</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-gray-500">🗓</span>
@@ -138,7 +136,7 @@ const EventsList = () => {
                 <CardFooter className="pt-3">
                   <Button
                     onClick={() => navigate(`/events/${event._id}`)}
-                    className="w-full text-sm font-medium"
+                    className="w-full text-sm font-medium hover:scale-[1.02] transition"
                   >
                     View Event
                   </Button>
@@ -148,23 +146,25 @@ const EventsList = () => {
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-3 mt-6">
+            <div className="flex justify-center items-center gap-4 mt-8">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
+                className="px-4"
               >
-                Prev
+                 Prev
               </Button>
               <span className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
+                Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong>
               </span>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                 disabled={currentPage === totalPages}
+                className="px-4"
               >
                 Next
               </Button>
