@@ -18,7 +18,7 @@ const UsersFilter = ({ onFilter }) => {
   const [sport, setSport] = useState("All");
   const [level, setLevel] = useState("All");
   const [time, setTime] = useState("All");
-  const [location, setLocation] = useState("");
+  const [location, setLocation] = useState("All");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -80,11 +80,18 @@ const UsersFilter = ({ onFilter }) => {
 
         <div className="flex flex-col gap-1">
           <Label>Location</Label>
-          <Input
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g. Lviv"
-          />
+          <Select value={location} onValueChange={setLocation}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select location" />
+            </SelectTrigger>
+            <SelectContent>
+              {locationOptions.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex flex-col gap-1">
