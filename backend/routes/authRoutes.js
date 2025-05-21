@@ -12,11 +12,13 @@ const {
   verifyChangeEmail,
   forgetPasswordInitiate,
   verifyForgetPasswordRequest,
+  getUserBalance
 } = require("../controllers/authControllers");
 
 router.get("/", (req, res) => {
   res.send("Auth Routes");
 });
+router.get("/balance", protect, getUserBalance);
 
 router.post("/register", registerUser);
 router.get("/token/verify/:token", protect, verifyToken);

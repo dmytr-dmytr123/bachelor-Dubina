@@ -8,12 +8,11 @@ const {
   cancelSentFriendRequest,
   getFriendRequests,
   getSentFriendRequests,
-  rejectFriendRequest
+  rejectFriendRequest,
 } = require("../controllers/friendsControllers");
 const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
-
 router.post("/add", protect, addFriend);
 router.post("/remove", protect, removeFriend);
 router.get("/all_users", protect, getAllUsers);

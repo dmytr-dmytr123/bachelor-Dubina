@@ -5,12 +5,13 @@ const {
   cancelBooking,
   getAllBookings,
   completeBooking,
-  getBookedSlotsForVenueDay
+  getBookedSlotsForVenueDay,
+  confirmBookingPayment
 } = require("../controllers/bookingControllers");
 const protect = require("../middlewares/authMiddleware");
 
 const router = express.Router();
-
+router.patch("/:id/confirm", protect, confirmBookingPayment);
 router.post("/webhook", express.raw({ type: "application/json" }), handlePaymentWebhook);
 router.get("/users-bookings", protect, getUserBookings);
 router.delete("/:id", protect, cancelBooking);
