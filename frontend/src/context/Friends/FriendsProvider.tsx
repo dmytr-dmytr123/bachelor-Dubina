@@ -14,6 +14,7 @@ const FriendsProvider = ({ children }) => {
   const [requests, setRequests] = useState<FriendUser[]>([]);
   const [sentRequests, setSentRequests] = useState<string[]>([]);
 
+
   const fetchAllFriendsData = async () => {
     try {
       const [fRes, rRes, sRes] = await Promise.all([
@@ -28,7 +29,6 @@ const FriendsProvider = ({ children }) => {
       toast({ title: "Failed to fetch friends data" });
     }
   };
-  
 
   const acceptRequest = async (userId: string) => {
     await axios.post("/friends/accept", { senderId: userId });
@@ -60,21 +60,20 @@ const FriendsProvider = ({ children }) => {
     setSentRequests((prev) => prev.filter((id) => id !== userId));
   };
 
-const fetchAllUsers = async () => {
-  try {
-    const res = await axios.get("/friends/all_users");
-    setAllUsers(res.data);
-  } catch {
-    toast({ title: "Failed to fetch users" });
-  }
-};
+  const fetchAllUsers = async () => {
+    try {
+      const res = await axios.get("/friends/all_users");
+      setAllUsers(res.data);
+    } catch {
+      toast({ title: "Failed to fetch users" });
+    }
+  };
 
   useEffect(() => {
     if (!user || !user.token) return;
     fetchAllFriendsData();
     fetchAllUsers();
   }, [user]);
-  
 
   return (
     <FriendsContext.Provider

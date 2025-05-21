@@ -1,11 +1,12 @@
 import { useState } from "react";
 import UserContext from "./UserContext";
-
 type Preferences = {
   sports: string[];
   skillLevel: "beginner" | "intermediate" | "advanced";
   timeOfDay: string[];
   location: string;
+  gender: string[];
+  age: number;
 };
 
 type User = {
@@ -15,6 +16,7 @@ type User = {
   isVerified: boolean;
   token: string;
   role: "user" | "venue_owner";
+  balance: number;
   preferences?: Preferences;
 };
 
@@ -35,7 +37,7 @@ const UserProvider = ({ children }) => {
     localStorage.setItem("user", JSON.stringify(value));
     setUser(value);
   };
-
+  
   return (
     <UserContext.Provider value={{ user, setUser: addUser, logout }}>
       {children}
