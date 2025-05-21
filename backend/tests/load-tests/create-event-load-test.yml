@@ -1,0 +1,30 @@
+config:
+  target: 'http://localhost:4000'
+  phases:
+    - duration: 30
+      arrivalRate: 10
+  defaults:
+    headers:
+      Authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZTE5YTQyN2Y0OTgxNTU0NWNmZTdjMyIsImlhdCI6MTc0Nzc0MzgzNSwiZXhwIjoxNzQ3ODMwMjM1fQ.HwoVPYZrayNQb0_CxaJf6DRQbYRZlTAMk5rC2iLwKa0'
+      Content-Type: 'application/json'
+
+scenarios:
+  - name: Create Event with Booking
+    flow:
+      - post:
+          url: "/api/events/create-with-booking"
+          json:
+            title: "Load Test Event"
+            description: "testing under load"
+            sportType: "Football"
+            skillLevel: "intermediate"
+            date: "2025-06-01"
+            time: "18:00"
+            maxParticipants: 10
+            venueId: "664a2e5ea37d342f289cb27c"
+            slot:
+              start: "2025-06-01T18:00:00.000Z"
+              end: "2025-06-01T19:00:00.000Z"
+            amount: 100
+
+
