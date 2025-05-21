@@ -77,8 +77,14 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-stripe card: 4242 4242 4242 4242  12/34 123 12345
-.env вже готовий до використання
+stripe card: 4242 4242 4242 4242  12/34 123 12345 (для бронювання локації при створенні події)
+
+щоб зареєструватися, потрібно перед цим замінити дані в .env(на бекенді) аби була можливість відправляти код підтвердження
+EMAIL_USER=your.email@gmail.com
+EMAIL_PASS=your-app-password-here
+Потрібно використати свою пошту та створити app password (https://myaccount.google.com/apppasswords), але має бути увімкенена 2-х факторка
+
+
 
 
 
