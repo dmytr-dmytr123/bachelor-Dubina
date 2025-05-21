@@ -158,6 +158,7 @@ const getSentFriendRequests = async (req, res) => {
   }
 };
 
+
 const rejectFriendRequest = async (req, res) => {
   try {
     const { senderId } = req.body;
@@ -194,4 +195,5 @@ module.exports = {
   cancelSentFriendRequest,
   getSentFriendRequests,
   rejectFriendRequest,
+  
 };

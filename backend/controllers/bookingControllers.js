@@ -75,16 +75,73 @@ const cancelBooking = async (req, res) => {
     if (booking.user.toString() !== req.user._id.toString()) {
       return res
         .status(403)
-        .json({ msg: "You are not authorized to cancel this booking." });
+        .json({ msg: "Not authorized to cancel this booking." });
     }
 
+    const start = new Date(booking.slot.start);
+    const end = new Date(booking.slot.end);
+    const slotString = `${start.toTimeString().slice(0, 5)}-${end
+      .toTimeString()
+      .slice(0, 5)}`;
+    const dayString = start.toLocaleDateString("en-US", { weekday: "short" });
+
+    const venue = await Venue.findById(booking.venue).populate("owner");
+
+    if (!venue || !venue.owner) {
+      console.warn("Venue or owner not found");
+      return res.status(404).json({ msg: "Venue or owner not found." });
+    }
+
+    const venueOwner = venue.owner;
+    const user = await User.findById(booking.user);
+    if (!user) {
+      console.warn("User or not not found");
+      return res.status(404).json({ msg: "Venue or owner not found." });
+    }
     if (booking.paymentIntentId) {
       try {
-        const refund = await stripe.refunds.create({
+        const paymentIntent = await stripe.paymentIntents.retrieve(
+          booking.paymentIntentId
+        );
+
+        const charges = await stripe.charges.list({
           payment_intent: booking.paymentIntentId,
+          limit: 1,
         });
-        console.log("Stripe refund issued:", refund.id);
-        booking.paymentStatus = "refunded";
+
+        const charge = charges.data[0];
+
+        const wasPaid =
+          paymentIntent.status === "succeeded" &&
+          charge &&
+          charge.status === "succeeded";
+
+        console.log("Was paid:", wasPaid);
+
+        if (!wasPaid) {
+          console.warn("Refund skipped: payment was not successful");
+        } else {
+          const refund = await stripe.refunds.create({
+            payment_intent: booking.paymentIntentId,
+          });
+
+          console.log("Stripe refund issued:", refund.id);
+          booking.paymentStatus = "refunded";
+
+          const durationHours = (end - start) / (1000 * 60 * 60);
+          const amountToRefund = Math.round(
+            venue.pricingPerHour * durationHours
+          );
+          console.log("Amount to refund:", amountToRefund);
+
+          venueOwner.balance = Math.max(0, venueOwner.balance - amountToRefund);
+          await venueOwner.save();
+
+          if (user) {
+            user.balance += amountToRefund;
+            await user.save();
+          }
+        }
       } catch (refundError) {
         console.error("Refund failed:", refundError.message);
         return res.status(500).json({ msg: "Failed to refund payment." });
@@ -92,13 +149,6 @@ const cancelBooking = async (req, res) => {
     }
 
     booking.status = "cancelled";
-    const start = new Date(booking.slot.start);
-    const end = new Date(booking.slot.end);
-
-    const slotString = `${start.toTimeString().slice(0, 5)}-${end
-      .toTimeString()
-      .slice(0, 5)}`;
-    const dayString = start.toLocaleDateString("en-US", { weekday: "short" });
 
     await Venue.findByIdAndUpdate(
       booking.venue,
@@ -162,6 +212,24 @@ const completeBooking = async (req, res) => {
   }
 };
 
+const confirmBookingPayment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const booking = await Booking.findById(id);
+
+    if (!booking) return res.status(404).json({ message: "Booking not found" });
+
+    booking.status = "active";
+    booking.paymentStatus = "succeeded";
+    await booking.save();
+
+    res.status(200).json({ message: "Booking confirmed" });
+  } catch (error) {
+    console.error("Failed to confirm payment:", error.message);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 const getBookedSlotsForVenueDay = async (req, res) => {
   try {
     const { venueId, date } = req.params;
@@ -197,4 +265,5 @@ module.exports = {
   getAllBookings,
   completeBooking,
   getBookedSlotsForVenueDay,
+  confirmBookingPayment,
 };

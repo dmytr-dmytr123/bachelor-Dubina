@@ -32,7 +32,9 @@ const inviteUserToEvent = async (req, res) => {
     event.invitedUsers.push(userIdToInvite);
     await event.save();
 
-    res.status(200).json({ message: "User has been invited. Waiting for confirmation." });
+    res
+      .status(200)
+      .json({ message: "User has been invited. Waiting for confirmation." });
   } catch (error) {
     console.error("Error inviting user:", error);
     res.status(500).json({ message: "Failed to invite user" });
@@ -51,7 +53,9 @@ const acceptInvite = async (req, res) => {
 
     //if not invited
     if (!event.invitedUsers.includes(userId)) {
-      return res.status(403).json({ message: "You are not invited to this event" });
+      return res
+        .status(403)
+        .json({ message: "You are not invited to this event" });
     }
 
     //if already there
@@ -70,7 +74,9 @@ const acceptInvite = async (req, res) => {
     user.attendedEvents.push(event._id);
     await user.save();
 
-    res.status(200).json({ message: "You have successfully joined the event." });
+    res
+      .status(200)
+      .json({ message: "You have successfully joined the event." });
   } catch (error) {
     console.error("Error accepting invite:", error);
     res.status(500).json({ message: "Failed to accept invitation" });
@@ -89,10 +95,6 @@ const getUserInvitations = async (req, res) => {
     res.status(500).json({ message: "Failed to load invitations" });
   }
 };
-
-
-
-
 
 const getUserRecommendations = async (req, res) => {
   try {
@@ -129,13 +131,11 @@ const getUserRecommendations = async (req, res) => {
     );
     res.status(200).json({ recommended_users });
     console.log("ABCD", recommended_users);
-    
   } catch (error) {
     console.error("User recommendation error:", error);
     res.status(500).json({ message: "User recommendation failed" });
   }
 };
-
 
 /*const getRecommendations = async (req, res) => {
   try {
@@ -216,9 +216,9 @@ const getRecommendations = async (req, res) => {
       sports: user.preferences?.sports || [],
       skillLevel: user.preferences?.skillLevel || "beginner",
       timeOfDay: user.preferences?.timeOfDay || [],
-      location: user.preferences?.location,
-      gender: user.preferences?.gender,
-      age: user.preferences?.age,
+      location: user.preferences?.location || "unknown",
+      gender: user.preferences?.gender || "unknown",
+      age: user.preferences?.age ?? 18,
     };
 
     const simplifiedEvents = events.map((e) => ({
@@ -231,7 +231,9 @@ const getRecommendations = async (req, res) => {
       location: e.venue?.location?.city || "Unknown",
     }));
 
-    const attendedEventDocs = await Event.find({ _id: { $in: user.attendedEvents } }).populate("venue");
+    const attendedEventDocs = await Event.find({
+      _id: { $in: user.attendedEvents },
+    }).populate("venue");
     const attendedEvents = attendedEventDocs.map((e) => ({
       sportType: e.sportType,
       skillLevel: e.skillLevel,
@@ -250,39 +252,38 @@ const getRecommendations = async (req, res) => {
       friendsAttended,
       "events"
     );
-    
+
     console.log("PYTHON RECOMMENDER RESULT:", result);
-    
+
     if (!result || !Array.isArray(result.recommendations)) {
       console.error("invalid recommendations returned from python script");
       return res.status(500).json({ message: "recommendation engine failed" });
     }
-    
-    const enriched = result.recommendations.map((rec) => {
-      const full = events.find((e) => e._id.toString() === rec.event_id);
-      if (!full) return null;
-    
-      return {
-        _id: full._id,
-        title: full.title,
-        sportType: full.sportType,
-        skillLevel: full.skillLevel,
-        date: full.date,
-        time: full.time,
-        location: full.venue?.location?.city,
-        score: rec.score,
-      };
-    }).filter(Boolean);
-    
-    
-    res.status(200).json({ recommendations: enriched });
 
+    const enriched = result.recommendations
+      .map((rec) => {
+        const full = events.find((e) => e._id.toString() === rec.event_id);
+        if (!full) return null;
+
+        return {
+          _id: full._id,
+          title: full.title,
+          sportType: full.sportType,
+          skillLevel: full.skillLevel,
+          date: full.date,
+          time: full.time,
+          location: full.venue?.location?.city,
+          score: rec.score,
+        };
+      })
+      .filter(Boolean);
+
+    res.status(200).json({ recommendations: enriched });
   } catch (error) {
     console.error("Recommendation error:", error);
     res.status(500).json({ message: "Recommendation failed" });
   }
 };
-
 
 const createEventWithBooking = async (req, res) => {
   try {
@@ -296,7 +297,6 @@ const createEventWithBooking = async (req, res) => {
       maxParticipants,
       venueId,
       slot,
-      amount,
     } = req.body;
     const userId = req.user._id;
 
@@ -308,11 +308,21 @@ const createEventWithBooking = async (req, res) => {
       !time ||
       !maxParticipants ||
       !venueId ||
-      !slot ||
-      !amount
+      !slot?.start ||
+      !slot?.end
     ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
+
+    const venue = await Venue.findById(venueId).populate("owner");
+    if (!venue) {
+      return res.status(404).json({ message: "Venue not found" });
+    }
+
+    const startTime = new Date(slot.start);
+    const endTime = new Date(slot.end);
+    const durationHours = Math.ceil((endTime - startTime) / (1000 * 60 * 60));
+    const amount = venue.pricingPerHour * durationHours;
 
     let booking;
     let paymentIntent;
@@ -333,10 +343,7 @@ const createEventWithBooking = async (req, res) => {
       booking = await Booking.create({
         user: userId,
         venue: venueId,
-        slot: {
-          start: new Date(slot.start),
-          end: new Date(slot.end),
-        },
+        slot: { start: startTime, end: endTime },
         status: "pending",
         paymentIntentId: paymentIntent.id,
         paymentStatus: "pending",
@@ -345,22 +352,16 @@ const createEventWithBooking = async (req, res) => {
       booking = await Booking.create({
         user: userId,
         venue: venueId,
-        slot: {
-          start: new Date(slot.start),
-          end: new Date(slot.end),
-        },
+        slot: { start: startTime, end: endTime },
         status: "active",
         paymentStatus: "succeeded",
       });
     }
 
+    //upd venue
     const bookedSlot = {
-      day: new Date(slot.start).toLocaleDateString("en-US", {
-        weekday: "short",
-      }),
-      slot: `${new Date(slot.start).toTimeString().slice(0, 5)}-${new Date(
-        slot.end
-      )
+      day: startTime.toLocaleDateString("en-US", { weekday: "short" }),
+      slot: `${startTime.toTimeString().slice(0, 5)}-${endTime
         .toTimeString()
         .slice(0, 5)}`,
     };
@@ -392,12 +393,38 @@ const createEventWithBooking = async (req, res) => {
       createdBy: userId,
     });
 
+    //balance changes
+    if (amount > 0) {
+      try {
+        const user = await User.findById(userId);
+        const venueOwner = venue.owner;
+
+        if (!user || !venueOwner) {
+          console.warn(
+            "User or Venue owner not found, skipping balance transfer"
+          );
+        } else {
+          if (user.balance < amount) {
+            return res.status(400).json({ message: "Insufficient balance" });
+          }
+
+          user.balance -= amount;
+          venueOwner.balance += amount;
+
+          await user.save();
+          await venueOwner.save();
+        }
+      } catch (err) {
+        console.error("Balance transfer failed:", err.message);
+      }
+    }
+
     res.status(201).json({
       msg: {
         title: "Event Created",
         desc: "Your event and booking were successfully created.",
       },
-      data: { event, booking },
+      data: { event, booking, amount },
       clientSecret: paymentIntent ? paymentIntent.client_secret : null,
     });
   } catch (error) {
@@ -662,7 +689,6 @@ const getEventById = async (req, res) => {
   }
 };
 
-
 const leaveEvent = async (req, res) => {
   try {
     const eventId = req.params.eventId;
@@ -754,7 +780,10 @@ const deleteEvent = async (req, res) => {
 const getMyCreatedEvents = async (req, res) => {
   try {
     const userId = req.user._id;
-    const events = await Event.find({ createdBy: userId }).populate("venue", "name location");
+    const events = await Event.find({ createdBy: userId }).populate(
+      "venue",
+      "name location"
+    );
     res.status(200).json(events);
   } catch (error) {
     console.error("Error fetching user's created events:", error);
@@ -765,14 +794,16 @@ const getMyCreatedEvents = async (req, res) => {
 const getMyJoinedEvents = async (req, res) => {
   try {
     const userId = req.user._id;
-    const events = await Event.find({ participants: userId }).populate("venue", "name location");
+    const events = await Event.find({ participants: userId }).populate(
+      "venue",
+      "name location"
+    );
     res.status(200).json(events);
   } catch (error) {
     console.error("Error fetching joined events:", error);
     res.status(500).json({ message: "Failed to retrieve your joined events" });
   }
 };
-
 
 module.exports = {
   createEventWithBooking,
@@ -788,5 +819,5 @@ module.exports = {
   acceptInvite,
   getUserInvitations,
   getMyCreatedEvents,
-  getMyJoinedEvents
+  getMyJoinedEvents,
 };
