@@ -8,7 +8,8 @@
     "deploy": "cd ../frontend && npm run build && cd ../backend && npm start",
     "dev": "nodemon server.js",
     "build": "npm install",
-    "test": "jest --runInBand"
+    "test": "jest --runInBand",
+    "test:load": "artillery run tests/load-tests/create-event-load-test.yml"
   },
   "author": "dima",
   "license": "ISC",

@@ -1,0 +1,105 @@
+
+> backend@1.0.0 test
+> jest --runInBand --verbose
+
+  console.log
+    
+    venue created:
+
+      at Object.log (tests/event.test.js:76:11)
+
+  console.log
+    {
+      _id: new ObjectId('682c62d1dd09f83bc0171a65'),
+      name: 'Test Arena',
+      description: 'For football games',
+      location: { address: '123 Street', city: 'Kyiv' },
+      sports: [ 'Football' ],
+      availability: [
+        {
+          day: 'Fri',
+          startTime: '08:00',
+          endTime: '12:00',
+          timeSlots: [Array],
+          _id: new ObjectId('682c62d1dd09f83bc0171a66')
+        }
+      ],
+      pricingPerHour: 50,
+      owner: new ObjectId('682c62d1dd09f83bc0171a60'),
+      images: [],
+      bookedSlots: [],
+      createdAt: 2025-05-20T11:09:05.945Z,
+      __v: 0
+    }
+
+      at Object.log (tests/event.test.js:77:11)
+
+  console.log
+    Middleware protect triggered
+
+      at log (middlewares/authMiddleware.js:6:13)
+
+  console.log
+    
+    booking done:
+
+      at Object.log (tests/event.test.js:120:11)
+
+  console.log
+    {
+      user: '682c62d1dd09f83bc0171a63',
+      venue: '682c62d1dd09f83bc0171a65',
+      slot: {
+        start: '2025-05-20T07:00:00.000Z',
+        end: '2025-05-20T08:00:00.000Z'
+      },
+      status: 'pending',
+      paymentIntentId: 'mock_payment_intent_id',
+      paymentStatus: 'pending',
+      _id: '682c62d1dd09f83bc0171a6b',
+      createdAt: '2025-05-20T11:09:05.985Z',
+      __v: 0
+    }
+
+      at Object.log (tests/event.test.js:121:11)
+
+  console.log
+    
+    event created:
+
+      at Object.log (tests/event.test.js:123:11)
+
+  console.log
+    {
+      title: 'Test Football Match',
+      description: 'Morning friendly game',
+      sportType: 'Football',
+      skillLevel: 'beginner',
+      date: '2025-05-20T07:00:00.000Z',
+      time: '10:00',
+      maxParticipants: 10,
+      venue: '682c62d1dd09f83bc0171a65',
+      booking: '682c62d1dd09f83bc0171a6b',
+      organizer: '682c62d1dd09f83bc0171a63',
+      createdBy: '682c62d1dd09f83bc0171a63',
+      participants: [],
+      status: 'upcoming',
+      invitedUsers: [],
+      _id: '682c62d2dd09f83bc0171a70',
+      createdAt: '2025-05-20T11:09:06.001Z',
+      __v: 0
+    }
+
+      at Object.log (tests/event.test.js:124:11)
+
+  console.log
+    
+    payment:
+
+      at Object.log (tests/event.test.js:126:11)
+
+  console.log
+    clientSecret: mock_client_secret
+
+      at Object.log (tests/event.test.js:127:11)
+

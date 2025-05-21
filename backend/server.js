@@ -19,6 +19,7 @@ const protectRoutes = require("./routes/protectRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
 const messageRoutes = require("./routes/chatRoutes");
 const friendsRoutes = require("./routes/friendsRoutes");
+
 const { crossOrigin } = require("./middlewares/corsMiddleware");
 
 const app = express();
