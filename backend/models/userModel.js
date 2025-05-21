@@ -11,6 +11,15 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "venue_owner"],
     default: "user",
   },
+  balance: {
+    type: Number,
+    default: 5000,
+    min: 0,
+  },
+  stripeAccountId: {
+    type: String,
+    default: null,
+  },
 
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
@@ -38,10 +47,9 @@ const userSchema = new mongoose.Schema({
   attendedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
   createdEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
   savedEvents: [{ type: mongoose.Schema.Types.ObjectId, ref: "Event" }],
-  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-  sentRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
-
+  sentRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
 });
 
 userSchema.pre("save", async function (next) {
