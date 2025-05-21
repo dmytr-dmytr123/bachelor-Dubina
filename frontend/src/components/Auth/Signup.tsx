@@ -4,15 +4,31 @@ import useUser from "@/context/User/UserHook";
 import useAxios from "@/hooks/useAxios";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { LoaderCircle } from "lucide-react";
 import PwdInput from "@/components/Auth/PwdInput";
 import { TabsContent } from "@/components/ui/tabs";
 
-const sportsOptions = ["Football", "Tennis", "Basketball", "Running", "Swimming", "Cycling"];
+const sportsOptions = [
+  "Football",
+  "Tennis",
+  "Basketball",
+  "Running",
+  "Swimming",
+  "Cycling",
+];
 const skillLevels = ["beginner", "intermediate", "advanced"];
 const timeOfDayOptions = ["morning", "day", "evening"];
+const gender = ["male", "female"];
+const city = ["Lviv", "Kyiv", "Dnipro", "Odesa", "Kharkiv"];
 
 const Signup = () => {
   const [step, setStep] = useState(1);
@@ -27,6 +43,8 @@ const Signup = () => {
   const [timeOfDay, setTimeOfDay] = useState<string[]>([]);
   const [location, setLocation] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [userGender, setUserGender] = useState("");
+  const [age, setAge] = useState("");
 
   const navigate = useNavigate();
   const { setUser } = useUser();
@@ -89,6 +107,8 @@ const Signup = () => {
         skillLevel,
         timeOfDay,
         location,
+        gender: userGender,
+        age,
       };
     }
 
@@ -104,14 +124,16 @@ const Signup = () => {
     }
   };
 
-  const totalSteps = role === "user" ? 5 : 2;
+  const totalSteps = role === "user" ? 6 : 2;
 
   return (
     <TabsContent value="signup">
       <Card>
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Step {step} of {totalSteps}</CardDescription>
+          <CardDescription>
+            Step {step} of {totalSteps}
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
@@ -121,23 +143,54 @@ const Signup = () => {
               <select
                 id="role"
                 value={role}
-                onChange={(e) => setRole(e.target.value as "user" | "venue_owner")}
+                onChange={(e) =>
+                  setRole(e.target.value as "user" | "venue_owner")
+                }
                 className="border p-2 rounded w-full"
               >
                 <option value="user">I want to join sports events</option>
-                <option value="venue_owner">I want to manage sports venues</option>
+                <option value="venue_owner">
+                  I want to manage sports venues
+                </option>
               </select>
 
               <Label htmlFor="name">Name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                required
+              />
 
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@example.com" required />
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="email@example.com"
+                required
+              />
 
-              <PwdInput id="pwd" name="Password" pwd={pwd} setPwd={setPwd} match={match} />
-              <PwdInput id="confirmPwd" name="Confirm Password" pwd={confirmPwd} setPwd={setConfirmPwd} match={match} />
+              <PwdInput
+                id="pwd"
+                name="Password"
+                pwd={pwd}
+                setPwd={setPwd}
+                match={match}
+              />
+              <PwdInput
+                id="confirmPwd"
+                name="Confirm Password"
+                pwd={confirmPwd}
+                setPwd={setConfirmPwd}
+                match={match}
+              />
 
-              {match === 2 && <p className="text-red-500 text-sm">Passwords do not match.</p>}
+              {match === 2 && (
+                <p className="text-red-500 text-sm">Passwords do not match.</p>
+              )}
             </>
           )}
 
@@ -147,7 +200,11 @@ const Signup = () => {
               <div className="grid grid-cols-2 gap-2">
                 {sportsOptions.map((sport) => (
                   <label key={sport} className="flex items-center space-x-2">
-                    <input type="checkbox" checked={sports.includes(sport)} onChange={() => handleSportChange(sport)} />
+                    <input
+                      type="checkbox"
+                      checked={sports.includes(sport)}
+                      onChange={() => handleSportChange(sport)}
+                    />
                     <span>{sport}</span>
                   </label>
                 ))}
@@ -158,7 +215,11 @@ const Signup = () => {
           {role === "user" && step === 3 && (
             <>
               <Label>Select Your Skill Level</Label>
-              <select value={skillLevel} onChange={(e) => setSkillLevel(e.target.value)} className="border p-2 rounded w-full">
+              <select
+                value={skillLevel}
+                onChange={(e) => setSkillLevel(e.target.value)}
+                className="border p-2 rounded w-full"
+              >
                 <option value="">Select skill level</option>
                 {skillLevels.map((level) => (
                   <option key={level} value={level}>
@@ -175,18 +236,61 @@ const Signup = () => {
               <div className="grid grid-cols-2 gap-2">
                 {timeOfDayOptions.map((time) => (
                   <label key={time} className="flex items-center space-x-2">
-                    <input type="checkbox" checked={timeOfDay.includes(time)} onChange={() => handleTimeChange(time)} />
+                    <input
+                      type="checkbox"
+                      checked={timeOfDay.includes(time)}
+                      onChange={() => handleTimeChange(time)}
+                    />
                     <span>{time}</span>
                   </label>
                 ))}
               </div>
             </>
           )}
-
           {role === "user" && step === 5 && (
             <>
-              <Label>Location</Label>
-              <Input type="text" placeholder="Your City" value={location} onChange={(e) => setLocation(e.target.value)} required />
+              <Label>Select Gender</Label>
+              <select
+                value={userGender}
+                onChange={(e) => setUserGender(e.target.value)}
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select gender</option>
+                {gender.map((g) => (
+                  <option key={g} value={g}>
+                    {g.charAt(0).toUpperCase() + g.slice(1)}
+                  </option>
+                ))}
+              </select>
+
+              <Label>Age</Label>
+              <Input
+                type="number"
+                placeholder="Your Age"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                required
+                min={10}
+                max={100}
+              />
+            </>
+          )}
+
+          {role === "user" && step === 6 && (
+            <>
+              <Label>Select City</Label>
+              <select
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Select a city</option>
+                {city.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
             </>
           )}
         </CardContent>
@@ -203,7 +307,11 @@ const Signup = () => {
             </Button>
           ) : (
             <Button type="submit" onClick={handleRegister} disabled={isLoading}>
-              {isLoading ? <LoaderCircle className="spinner animate-spin" /> : "Finish Sign Up"}
+              {isLoading ? (
+                <LoaderCircle className="spinner animate-spin" />
+              ) : (
+                "Finish Sign Up"
+              )}
             </Button>
           )}
         </CardFooter>
