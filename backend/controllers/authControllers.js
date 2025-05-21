@@ -33,11 +33,9 @@ const registerUser = async (req, res) => {
       throw new Error("Please provide all required fields.");
     }
 
-    
     const allowedRoles = ["user", "venue_owner"];
     const userRole = role && allowedRoles.includes(role) ? role : "user";
 
-   
     let validatedPreferences = undefined;
 
     if (userRole === "user") {
@@ -45,9 +43,12 @@ const registerUser = async (req, res) => {
 
       const { sports, skillLevel, timeOfDay, location } = preferences;
 
-      if (!sports || sports.length === 0) throw new Error("Please select at least one sport.");
-      if (!["beginner", "intermediate", "advanced"].includes(skillLevel)) throw new Error("Invalid skill level.");
-      if (!timeOfDay || timeOfDay.length === 0) throw new Error("Please select at least one preferred time.");
+      if (!sports || sports.length === 0)
+        throw new Error("Please select at least one sport.");
+      if (!["beginner", "intermediate", "advanced"].includes(skillLevel))
+        throw new Error("Invalid skill level.");
+      if (!timeOfDay || timeOfDay.length === 0)
+        throw new Error("Please select at least one preferred time.");
       if (!location) throw new Error("Location is required.");
 
       validatedPreferences = { sports, skillLevel, timeOfDay, location };
@@ -98,8 +99,6 @@ const registerUser = async (req, res) => {
     res.status(400).send({ msg: { title: error.message } });
   }
 };
-
-
 
 const verifyToken = async (req, res) => {
   try {
@@ -157,7 +156,8 @@ const regenerateToken = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password, rememberMe } = req.body;
-    if (!email || !password) throw new Error("Please provide email and password.");
+    if (!email || !password)
+      throw new Error("Please provide email and password.");
 
     const user = await User.findOne({ email: email });
     if (user) {
@@ -171,6 +171,7 @@ const login = async (req, res) => {
             isVerified: user.isVerified,
             role: user.role,
             preferences: user.preferences,
+            balance: user.balance,
             token: generateToken(user._id, rememberMe),
           },
           msg: {
@@ -186,7 +187,6 @@ const login = async (req, res) => {
     res.status(400).send({ msg: { title: error.message } });
   }
 };
-
 
 const changePassword = async (req, res) => {
   try {
@@ -225,8 +225,7 @@ const changeEmail = async (req, res) => {
     const newUser = await User.findOne({ email: newEmail });
     if (newUser) throw new Error("Requested email is already registered.");
 
-    if (!user)
-      throw new Error("Login again and then initiate this request.");
+    if (!user) throw new Error("Login again and then initiate this request.");
     else {
       const hehe = await user.matchPassword(password);
       if (hehe) {
@@ -347,6 +346,20 @@ const verifyForgetPasswordRequest = async (req, res) => {
   }
 };
 
+const getUserBalance = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const user = await User.findById(userId).select("balance");
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({ balance: user.balance });
+  } catch (err) {
+    console.error("Error fetching balance:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   verifyToken,
@@ -357,4 +370,5 @@ module.exports = {
   verifyChangeEmail,
   forgetPasswordInitiate,
   verifyForgetPasswordRequest,
+  getUserBalance,
 };
