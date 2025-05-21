@@ -77,7 +77,7 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
-
+stripe card: 4242 4242 4242 4242  12/34 123 12345
 .env вже готовий до використання
 
 
