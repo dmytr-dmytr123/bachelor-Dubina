@@ -1,13 +1,19 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import useBooking from "@/context/Booking/BookingHook";
+import useUser from "@/context/User/UserHook";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { CalendarDays, Clock, XCircle } from "lucide-react";
 
+const PAGE_SIZE = 6;
+
 const MyBookings = () => {
   const { fetchMyBookings, bookings, cancelBooking } = useBooking();
   const { toast } = useToast();
+
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchMyBookings();
@@ -17,14 +23,6 @@ const MyBookings = () => {
     await cancelBooking(id);
     fetchMyBookings();
   };
-
-  if (!bookings.length) {
-    return (
-      <p className="text-center mt-10 text-muted-foreground text-lg">
-        No bookings found.
-      </p>
-    );
-  }
 
   const getStatusStyle = (status: string) => {
     switch (status) {
@@ -37,11 +35,28 @@ const MyBookings = () => {
     }
   };
 
+  const sortedBookings = [...bookings].sort(
+    (a, b) =>
+      new Date(b.slot.start).getTime() - new Date(a.slot.start).getTime()
+  );
+
+  const paginatedBookings = sortedBookings.slice(
+    (page - 1) * PAGE_SIZE,
+    page * PAGE_SIZE
+  );
+
+  if (!bookings.length) {
+    return (
+      <p className="text-center mt-10 text-muted-foreground text-lg">
+        No bookings found.
+      </p>
+    );
+  }
+
   return (
     <div className="max-w-6xl mx-auto mt-10 px-4">
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {bookings.map((booking) => {
+        {paginatedBookings.map((booking) => {
           const isCancelled = booking.status === "cancelled";
           const isCompleted = booking.status === "completed";
 
@@ -105,6 +120,24 @@ const MyBookings = () => {
             </Card>
           );
         })}
+      </div>
+
+      {/* Pagination controls */}
+      <div className="flex justify-center gap-2 mt-6">
+        <Button
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          Prev
+        </Button>
+        <Button
+          variant="outline"
+          disabled={page * PAGE_SIZE >= bookings.length}
+          onClick={() => setPage((p) => p + 1)}
+        >
+          Next
+        </Button>
       </div>
     </div>
   );
