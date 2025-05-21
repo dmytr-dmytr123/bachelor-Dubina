@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import {
   DropdownMenu,
@@ -17,19 +17,35 @@ import useUser from "@/context/User/UserHook";
 import EmailDialog from "@/components/Auth/EmailDialog";
 import PasswordDialog from "@/components/Auth/PasswordDialog";
 import { ModeToggle } from "./mode-toggle";
+import useAxios from "../hooks/useAxios";
 
 const Header = () => {
   const { user, logout } = useUser();
   const [emailDialog, setEmailDialog] = useState(false);
   const [pwdDialog, setPwdDialog] = useState(false);
   const navigate = useNavigate();
-
+  const axios = useAxios();
   const handleLogout = () => {
     logout();
   };
-
   const isVenueOwner = user?.role === "venue_owner";
   const isUsualUser = user?.role === "user";
+
+  const [balance, setBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const res = await axios.get("/auth/balance");
+        console.log('res',res);
+        setBalance(res.data.balance);
+      } catch (err) {
+        console.error("Failed to fetch balance:", err);
+      }
+    };
+
+    if (user) fetchBalance();
+  },);
 
   return (
     <header className="top-0 flex h-16 items-center gap-4 border-b px-4 md:px-6 sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -264,6 +280,9 @@ const Header = () => {
                 </DialogTrigger>
                 <InvitationsModal />
               </Dialog>
+              <span className="text-sm text-muted-foreground font-medium">
+                {balance}₴
+              </span>
             </>
           )}
 
