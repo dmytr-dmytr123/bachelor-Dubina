@@ -41,6 +41,13 @@ const ChatProvider = ({ children }) => {
         ...prev,
         [recipientId]: [...(prev[recipientId] || []), msg],
       }));
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.user._id === recipientId
+            ? { ...chat, lastMessage: msg.content }
+            : chat
+        )
+      );
     } catch (err) {
       console.error("Send failed", err);
     }
@@ -56,6 +63,13 @@ const ChatProvider = ({ children }) => {
         ...prev,
         [peerId]: [...(prev[peerId] || []), msg],
       }));
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.user._id === peerId
+            ? { ...chat, lastMessage: msg.content }
+            : chat
+        )
+      );
     };
 
     socket.on("message:receive", handleReceive);
