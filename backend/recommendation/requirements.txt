@@ -4,3 +4,4 @@ lightgbm
 joblib
 matplotlib
 sentence-transformers
+pandas

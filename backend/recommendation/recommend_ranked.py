@@ -3,9 +3,10 @@ import joblib
 from sklearn.metrics.pairwise import cosine_similarity
 import os
 from event_vectorizer import EventVectorizer
+import pandas as pd
 
 model_path = os.path.join(os.path.dirname(__file__), "lgbm_model.pkl")
-vectorizer, model, kmeans, scaler = joblib.load(model_path)
+vectorizer, model, kmeans, scaler, feature_names = joblib.load(model_path)
 
 def recommend_events(profile, events, history=[], friends=[]):
     results = []
@@ -50,8 +51,16 @@ def recommend_events(profile, events, history=[], friends=[]):
                 if -1 in full_vec:
                     continue
 
-                full_vec_scaled = scaler.transform([full_vec])
-                score = model.predict(full_vec_scaled)[0]
+
+                full_vec_df = pd.DataFrame([full_vec], columns=feature_names)
+
+
+                full_vec_scaled_array = scaler.transform(full_vec_df)
+                full_vec_scaled_df = pd.DataFrame(full_vec_scaled_array, columns=feature_names)
+
+                score = model.predict(full_vec_scaled_df)[0]
+
+
 
             results.append({
                 "event_id": ev.get("_id", ev.get("title", "?")),
